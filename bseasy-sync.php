@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Plugin Name: BSEasy Sync
+ * Plugin Name: BSEasy Sync V4
  * Plugin URI: https://bezugssysteme.de
  * Description: Synchronisiert Mitglieder- und Kontaktdaten aus EasyVerein (API v2.0) mit WordPress. Zeigt Mitgliederlisten, interaktive Karten und Kalender im Frontend an.
  * Version: 3.0.0
