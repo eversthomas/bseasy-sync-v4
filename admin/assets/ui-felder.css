@@ -1,0 +1,300 @@
+/* Neue bes-* Klassen */
+.bes-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.bes-section h3 {
+  margin-bottom: 0.5rem;
+}
+
+/* Arbeitsleiste (vereinfacht) */
+.bes-toolbar {
+  position: static;
+  background: #f8f9fa;
+  padding: 12px;
+  border: 1px solid #e2e4e7;
+  border-radius: 6px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+  margin-bottom: 20px;
+}
+
+.bes-toolbar-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bes-search-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.bes-view-select {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.bes-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.bes-toolbar-advanced {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e4e7;
+}
+
+.bes-toolbar-advanced summary {
+  cursor: pointer;
+  color: #666;
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+.bes-toolbar-advanced-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 2-Spalten Layout */
+.bes-field-admin {
+  margin-top: 20px;
+}
+
+.bes-panes {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 16px;
+  align-items: start;
+}
+
+.bes-pane-left {
+  position: static;
+  max-height: none;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.bes-pane-right {
+  height: calc(100vh - 200px);
+  overflow-y: auto;
+  background: #fafafa;
+  border: 1px solid #e2e4e7;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.bes-pane-right .bes-section {
+  margin-bottom: 0;
+}
+
+.bes-pane-right .bes-section h3 {
+  margin-top: 0;
+  font-size: 1em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 12px;
+}
+
+/* Quick-Add-Buttons (nur in rechter Palette) */
+.bes-quick-add-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.bes-quick-add-buttons .button {
+  padding: 6px 10px;
+  font-size: 0.9em;
+  line-height: 1.2;
+}
+
+/* Responsive: unter 1200px 1-spaltig */
+@media (max-width: 1200px) {
+  .bes-panes {
+    grid-template-columns: 1fr;
+  }
+  
+  .bes-pane-left {
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+  }
+  
+  .bes-pane-right {
+    height: auto;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+}
+
+.bes-sortable {
+  border: 1px solid #ddd;
+  background: #fafafa;
+  padding: 0.5rem;
+  min-height: 60px;
+}
+
+.bes-field-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 6px 8px;
+  border: 1px solid #eee;
+  background: #fff;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.bes-field-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.bes-header-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drag-handle {
+  cursor: grab;
+  color: #888;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.bes-id {
+  width: 90px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.bes-label {
+  flex: 1;
+  padding: 4px 6px;
+}
+
+.bes-header-main .bes-label {
+  width: 100%;
+  max-width: none !important;
+}
+
+.bes-example {
+  flex: 2;
+  color: #999;
+  font-size: 0.85em;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+.dragging {
+  background: #e0f7fa;
+  border-color: #26a69a;
+}
+
+.bes-actions {
+  margin-top: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.notice-inline {
+  margin: 1rem 0;
+  font-weight: 500;
+}
+
+input {
+  max-width: 400px !important;
+}
+
+.bes-field-options {
+  display: flex;
+  gap: 1em;
+  align-items: center;
+  margin-top: 0.3em;
+  font-size: 0.9em;
+  flex-wrap: wrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+.bes-field-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Sticky Toolbar & Layout tweaks (Legacy-Kompatibilität) */
+.bes-quick-actions {
+  position: static;
+  background: #f8f9fa;
+  padding: 10px;
+  border: 1px solid #e2e4e7;
+  border-radius: 6px;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+}
+
+.bes-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.bes-stats span {
+  margin-right: 10px;
+  font-weight: 600;
+}
+
+.bes-toolbar .button-primary,
+.bes-quick-actions .button-primary {
+  transition: box-shadow 0.15s ease;
+}
+
+/* Unused einklappen */
+.bes-section.bes-collapsed .bes-sortable {
+  display: none;
+}
+.bes-section.bes-collapsed h3::after {
+  content: " (eingeklappt)";
+  color: #666;
+  font-weight: normal;
+  font-size: 12px;
+}
+
+/* Badge/Mark */
+.bes-id mark {
+  background: #fff6c4;
+  padding: 0 2px;
+}
+

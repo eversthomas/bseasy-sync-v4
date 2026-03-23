@@ -1,0 +1,270 @@
+.bes-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.bes-tabs button {
+  background: #f3f3f3;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.bes-tabs button.active {
+  background: #0073aa;
+  color: #fff;
+  border-color: #0073aa;
+}
+
+.bes-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid #ddd;
+  color: #666;
+  font-size: 13px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: left;
+}
+.bes-footer__logo {
+  background: #1f1f1f;
+  padding: 10px 14px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bes-footer__logo-img {
+  max-width: 280px;
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.bes-footer__text {
+  min-width: 240px;
+  max-width: 420px;
+}
+.bes-footer__line {
+  margin: 0 0 6px 0;
+}
+.bes-footer__small {
+  margin: 0;
+  font-size: 12px;
+}
+
+.bes-admin .tab {
+  display: none;
+  border: 1px solid #ddd;
+  padding: 15px;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.bes-admin .tab.active {
+  display: block;
+}
+
+
+.bes-showlabel {
+  margin-left: 1em;
+  font-size: 0.9em;
+  color: #444;
+}
+.bes-showlabel input {
+  margin-right: 4px;
+}
+
+
+/* Progress-Bar Styles */
+.bes-progress {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+}
+
+/* Layout & Cards */
+.bes-top-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 960px) {
+  .bes-top-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.bes-sync-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 960px) {
+  .bes-sync-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.bes-card {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.bes-card-success {
+  background: #dff4e2;
+  border-color: #c3e6cb;
+}
+
+.bes-card-muted {
+  background: #f8f9fa;
+  border-color: #dcdcde;
+}
+
+.bes-card-title {
+  margin: 0 0 8px 0;
+  color: #1d2327;
+  font-weight: 600;
+}
+
+.bes-card-text {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #1d2327;
+}
+
+.bes-card-block {
+  margin-bottom: 10px;
+}
+
+.bes-card-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bes-card-hint {
+  font-size: 12px;
+  color: #646970;
+}
+
+.bes-card-message {
+  margin-top: 10px;
+}
+
+.bes-text-success {
+  color: #00a32a;
+}
+.bes-text-warning {
+  color: #d63638;
+}
+.bes-text-muted {
+  color: #646970;
+}
+.bes-text-error {
+  color: #d63638;
+}
+
+/* Buttons & Spinner */
+.bes-action-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.bes-action-spacer {
+  width: 12px;
+  display: inline-block;
+}
+
+.bes-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #fff;
+  border-top-color: transparent;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  animation: bes-spin 0.7s linear infinite;
+  opacity: 0;
+  transform: translateY(1px);
+}
+
+.button:not(.button-primary) .bes-spinner {
+  border-color: #50575e;
+  border-top-color: transparent;
+}
+
+.is-bes-loading .bes-spinner {
+  opacity: 1;
+}
+
+.is-bes-loading .bes-btn-label {
+  opacity: 0.9;
+}
+
+@keyframes bes-spin {
+  to {
+    transform: translateY(1px) rotate(360deg);
+  }
+}
+
+
+/* Sync-Status visuelle Hervorhebung */
+.bes-sync-running {
+  border-left: 4px solid #0073aa;
+  background: #f0f6fc;
+}
+
+.bes-sync-done {
+  border-left: 4px solid #00a32a;
+  background: #f0f6fc;
+  animation: pulse-success 2s ease-in-out;
+}
+
+.bes-sync-error {
+  border-left: 4px solid #d63638;
+  background: #fcf0f1;
+}
+
+@keyframes pulse-success {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Toast-Benachrichtigungen */
+.bes-toast {
+  cursor: pointer;
+  transition: opacity 0.3s ease-out;
+}
+
+.bes-toast:hover {
+  opacity: 0.9;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

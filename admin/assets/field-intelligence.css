@@ -1,0 +1,482 @@
+/**
+ * Field Intelligence Dashboard Modal Styles
+ */
+
+/* Modal Overlay */
+.bes-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bes-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(2px);
+}
+
+.bes-modal-content {
+    position: relative;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 90%;
+    max-height: 90vh;
+    width: 1000px;
+    display: flex;
+    flex-direction: column;
+    z-index: 100001;
+}
+
+.bes-modal-header {
+    padding: 20px 30px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    position: relative;
+}
+
+.bes-modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.bes-modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 32px;
+    line-height: 1;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.bes-modal-close:hover {
+    background: #f0f0f1;
+    color: #000;
+}
+
+.bes-modal-body {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Tab Navigation */
+.bes-modal-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    background: #f9f9f9;
+    padding: 0 20px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.bes-tab-btn {
+    background: none;
+    border: none;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #666;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.bes-tab-btn:hover {
+    color: #2271b1;
+    background: #f0f0f1;
+}
+
+.bes-tab-btn.active {
+    color: #2271b1;
+    border-bottom-color: #2271b1;
+    background: #fff;
+}
+
+/* Tab Content */
+.bes-modal-tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 30px;
+    min-height: 400px;
+}
+
+.bes-tab-pane {
+    display: none;
+}
+
+.bes-tab-pane.active {
+    display: block;
+}
+
+.bes-loading,
+.bes-error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.bes-error {
+    color: #d63638;
+}
+
+/* Overview Tab */
+.bes-intelligence-overview h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #1d2327;
+}
+
+.bes-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.bes-stat-card {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+    text-align: center;
+}
+
+.bes-stat-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #2271b1;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.bes-stat-label {
+    font-size: 12px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bes-type-distribution,
+.bes-area-distribution {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.bes-dist-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.bes-dist-item:last-child {
+    border-bottom: none;
+}
+
+.bes-dist-label {
+    color: #666;
+}
+
+.bes-dist-value {
+    font-weight: bold;
+    color: #2271b1;
+}
+
+/* Suggestions Tab */
+.bes-intelligence-suggestions h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #1d2327;
+}
+
+.bes-suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bes-suggestion-item {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.bes-suggestion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.bes-suggestion-header strong {
+    font-family: monospace;
+    font-size: 13px;
+    color: #1d2327;
+}
+
+.bes-confidence {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.bes-confidence-high {
+    background: #00a32a;
+    color: #fff;
+}
+
+.bes-confidence-medium {
+    background: #dba617;
+    color: #fff;
+}
+
+.bes-confidence-low {
+    background: #d63638;
+    color: #fff;
+}
+
+.bes-suggestion-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.bes-suggestion-current,
+.bes-suggestion-proposed {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+}
+
+.bes-label {
+    font-size: 12px;
+    color: #666;
+    min-width: 80px;
+}
+
+.bes-suggestion-reason {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #eee;
+}
+
+.bes-suggestion-reason small {
+    color: #666;
+    font-style: italic;
+}
+
+.bes-category-badge {
+    background: #2271b1;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.bes-example {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-top: 8px;
+}
+
+.bes-example code {
+    background: none;
+    padding: 0;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Recommendations Tab */
+.bes-recommendations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bes-recommendation-item {
+    display: flex;
+    gap: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.bes-recommendation-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.bes-recommendation-content {
+    flex: 1;
+}
+
+.bes-recommendation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.bes-recommendation-type {
+    background: #2271b1;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+/* Duplicates & Groupings Tabs */
+.bes-duplicates-list,
+.bes-groupings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.bes-duplicate-item,
+.bes-grouping-item {
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+.bes-duplicate-header,
+.bes-grouping-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.bes-grouping-count {
+    background: #2271b1;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.bes-fields-list {
+    margin: 10px 0 0 0;
+    padding-left: 20px;
+}
+
+.bes-fields-list li {
+    margin: 5px 0;
+    font-size: 13px;
+}
+
+.bes-fields-list code {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Help Tab */
+.bes-help-content {
+    line-height: 1.6;
+}
+
+.bes-help-content h3 {
+    margin-top: 0;
+    color: #1d2327;
+}
+
+.bes-help-content h4 {
+    margin-top: 25px;
+    margin-bottom: 10px;
+    color: #1d2327;
+    font-size: 15px;
+}
+
+.bes-help-content ul {
+    margin: 10px 0;
+    padding-left: 25px;
+}
+
+.bes-help-content li {
+    margin: 8px 0;
+}
+
+.bes-help-content code {
+    background: #f0f0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 782px) {
+    .bes-modal-content {
+        max-width: 95%;
+        max-height: 95vh;
+    }
+    
+    .bes-modal-header {
+        padding: 15px 20px;
+    }
+    
+    .bes-modal-tab-content {
+        padding: 15px 20px;
+    }
+    
+    .bes-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .bes-modal-tabs {
+        padding: 0 10px;
+    }
+    
+    .bes-tab-btn {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+
+
+

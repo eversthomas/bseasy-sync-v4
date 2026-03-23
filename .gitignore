@@ -1,0 +1,78 @@
+# WordPress-spezifische Dateien
+*.log
+debug/
+*.cache
+
+# Betriebssystem-Dateien
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# Editor-Dateien
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Temporäre Dateien
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# Node.js (falls du später Build-Tools verwendest)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Composer (falls verwendet)
+/vendor/
+composer.lock
+
+# Umgebungsvariablen
+.env
+.env.local
+.env.*.local
+
+# WordPress Uploads (falls versehentlich im Plugin-Ordner)
+uploads/
+
+# Sicherungsdateien
+*.zip
+*.tar.gz
+*.tar
+
+# Debug-Dateien
+debug.log
+error_log
+
+# IDE-spezifische Dateien
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# PHPStorm
+.idea/
+
+# VS Code
+.vscode/
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+desktop.ini
+$RECYCLE.BIN/
+
