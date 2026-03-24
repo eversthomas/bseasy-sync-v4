@@ -11,9 +11,9 @@ if (!defined('ABSPATH')) exit;
 
 // Stelle sicher, dass BES_DIR definiert ist
 if (!defined('BES_DIR')) {
-    // Fallback: Versuche Plugin-Pfad zu ermitteln
+    // Fallback: Plugin-Root (Datei liegt unter admin/views/)
     $plugin_file = __FILE__;
-    $plugin_dir = dirname(dirname($plugin_file));
+    $plugin_dir = dirname(dirname(dirname($plugin_file)));
     define('BES_DIR', trailingslashit($plugin_dir));
 }
 
@@ -21,8 +21,8 @@ if (!defined('BES_DIR')) {
 if (!defined('BES_V3_OPTION_PREFIX')) {
     if (defined('BES_DIR') && file_exists(BES_DIR . 'includes/constants-v3.php')) {
         require_once BES_DIR . 'includes/constants-v3.php';
-    } elseif (file_exists(__DIR__ . '/../includes/constants-v3.php')) {
-        require_once __DIR__ . '/../includes/constants-v3.php';
+    } elseif (file_exists(__DIR__ . '/../../includes/constants-v3.php')) {
+        require_once __DIR__ . '/../../includes/constants-v3.php';
     }
 }
 
@@ -51,89 +51,11 @@ if (!function_exists('bseasy_v3_load_selection')) {
     $cache_duration_minutes = round($cache_duration / 60);
 ?>
 
-<!-- Minibedienungsanleitung - Übersicht -->
-<div class="bes-card bes-card-info" style="margin-bottom: 20px; border-left: 4px solid #2271b1;">
-    <h3 class="bes-card-title">📖 Empfohlener Ablauf (Ersteinrichtung)</h3>
-    <div class="bes-card-block">
-        <ol style="margin-left: 20px; padding-left: 0;">
-            <li style="margin-bottom: 8px;"><strong>API-Zugangsdaten</strong> konfigurieren (Token + Consent-Feld-ID)</li>
-            <li style="margin-bottom: 8px;"><strong>V3 Explorer</strong> ausführen (erstellt Feldkatalog)</li>
-            <li style="margin-bottom: 8px;"><strong>V3 Feldauswahl</strong> öffnen und gewünschte Felder auswählen</li>
-            <li style="margin-bottom: 8px;"><strong>V3 Sync</strong> starten (synchronisiert die ausgewählten Felder)</li>
-        </ol>
-        <p class="bes-card-text" style="margin-top: 15px; margin-bottom: 0;">
-            <strong>Hinweis:</strong> Detaillierte Erklärungen zu jeder Funktion finden Sie direkt in den jeweiligen Bereichen.
-        </p>
-    </div>
-</div>
+<?php require_once BES_DIR . 'admin/views/partials/sync-onboarding-hint.php'; ?>
 
 <div class="bes-top-grid">
 
-    <!-- Cache-Verwaltung -->
-    <div class="bes-card bes-card-muted">
-        <h3 class="bes-card-title">Cache-Verwaltung</h3>
-        <div class="bes-card-block">
-            <p class="bes-card-text" style="margin-bottom: 15px;">
-                <strong>Zweck:</strong> Verwaltet den lokalen Cache für bessere Performance. Der Cache speichert gerenderte Inhalte, Karten-Daten und API-Antworten temporär.<br>
-                <strong>Wann nutzen:</strong> Bei Problemen mit veralteten Daten oder nach größeren Änderungen. Der Cache wird automatisch nach <?php echo esc_html($cache_duration_minutes); ?> Minuten erneuert.
-            </p>
-        </div>
-        
-        <?php if ($cache_stats): ?>
-            <div class="bes-card-block">
-                <p class="bes-card-text">
-                    <strong>Status:</strong> 
-                    <?php if ($cache_enabled): ?>
-                        <span class="bes-text-success">Aktiv</span>
-                        <?php if ($dev_mode): ?>
-                            <span class="bes-text-warning">(Dev-Mode: <?php echo esc_html($cache_duration_minutes); ?> Min)</span>
-                        <?php else: ?>
-                            <span class="bes-text-muted">(<?php echo esc_html($cache_duration_minutes); ?> Min)</span>
-                        <?php endif; ?>
-                    <?php else: ?>
-                        <span class="bes-text-error">Deaktiviert</span>
-                    <?php endif; ?>
-                </p>
-                <p class="bes-card-text">
-                    <strong>Einträge:</strong>
-                    <span id="bes-cache-total"><?php echo esc_html($cache_stats['total_entries']); ?></span>
-                    <span id="bes-cache-details">
-                        (Renderer: <span id="bes-cache-render"><?php echo esc_html($cache_stats['render_cache']); ?></span>,
-                        Map: <span id="bes-cache-map"><?php echo esc_html($cache_stats['map_cache']); ?></span><?php 
-                        if (isset($cache_stats['select_options_cache']) && $cache_stats['select_options_cache'] > 0): 
-                            ?>, Select-Options: <span id="bes-cache-select"><?php echo esc_html($cache_stats['select_options_cache']); ?></span><?php 
-                        endif;
-                        if (isset($cache_stats['rate_limit_cache']) && $cache_stats['rate_limit_cache'] > 0): 
-                            ?>, Rate-Limit: <span id="bes-cache-rate-limit"><?php echo esc_html($cache_stats['rate_limit_cache']); ?></span><?php 
-                        endif;
-                        if (isset($cache_stats['other_cache']) && $cache_stats['other_cache'] > 0): 
-                            ?>, Sonstige: <span id="bes-cache-other"><?php echo esc_html($cache_stats['other_cache']); ?></span><?php 
-                        endif;
-                        ?>)
-                    </span>
-                </p>
-                <?php if ($cache_stats['total_size_mb'] > 0): ?>
-                    <p class="bes-card-text">
-                        <strong>Größe:</strong> <span id="bes-cache-size"><?php echo esc_html($cache_stats['total_size_mb']); ?></span> MB
-                    </p>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-        
-        <div class="bes-card-actions">
-            <button type="button" id="bes-clear-cache" class="button button-secondary">
-                <span class="bes-spinner" aria-hidden="true"></span>
-                <span class="bes-btn-label">Cache leeren</span>
-            </button>
-            <?php if ($dev_mode): ?>
-                <span class="bes-card-hint">
-                    Dev-Mode aktiv: Cache-Dauer reduziert auf <?php echo esc_html($cache_duration_minutes); ?> Minuten
-                </span>
-            <?php endif; ?>
-        </div>
-        
-        <div id="bes-cache-message" class="bes-card-message"></div>
-    </div>
+<?php require_once BES_DIR . 'admin/views/partials/sync-tab-cache-card.php'; ?>
 
     <!-- API-Zugangsdaten -->
     <div class="bes-card">

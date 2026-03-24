@@ -41,7 +41,7 @@ Das Field Intelligence Dashboard ist ein zusätzliches Modal-Tool, das Analysen,
 ## Technische Details
 
 ### Dateien
-- `admin/includes/field-intelligence.php` - PHP-Backend-Logik
+- `admin/fields/includes/field-intelligence.php` - PHP-Backend-Logik
 - `admin/assets/field-intelligence.js` - JavaScript für Modal
 - `admin/assets/field-intelligence.css` - Styling für Modal
 
