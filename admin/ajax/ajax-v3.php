@@ -42,22 +42,19 @@ add_action('wp_ajax_bes_v3_run_explorer', function () {
     }
     
     // Verhindere parallelen Lauf mit V3 Sync/Explorer
-    $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
-    if (file_exists($status_file)) {
-        $status_data = bseasy_v3_read_json($status_file);
-        if (!empty($status_data['state']) && $status_data['state'] === 'running') {
-            wp_send_json_error([
-                'error' => esc_html__(
-                    'Es läuft bereits ein V3 Prozess (Sync oder Explorer). Bitte warten Sie, bis dieser abgeschlossen ist.',
-                    BES_TEXT_DOMAIN
-                ),
-            ]);
-            return;
-        }
+    $status_data = bes_sync_get_status();
+    if (!empty($status_data['state']) && $status_data['state'] === 'running') {
+        wp_send_json_error([
+            'error' => esc_html__(
+                'Es läuft bereits ein V3 Prozess (Sync oder Explorer). Bitte warten Sie, bis dieser abgeschlossen ist.',
+                BES_TEXT_DOMAIN
+            ),
+        ]);
+        return;
     }
     
     // Setze Explorer-Status auf "running"
-    bseasy_v3_update_status(0, 100, "API Explorer wird gestartet...", 'running');
+    bes_sync_update_status(0, 100, "API Explorer wird gestartet...", 'running');
     update_option(BES_V3_OPTION_PREFIX . 'explorer_running', true);
     update_option(BES_V3_OPTION_PREFIX . 'explorer_sample_size', $sample_size);
     update_option(BES_V3_OPTION_PREFIX . 'explorer_fresh_from_api', $fresh_from_api);
@@ -73,7 +70,7 @@ add_action('wp_ajax_bes_v3_run_explorer', function () {
     $scheduled = wp_schedule_single_event(time(), $hook, $args);
     
     if ($scheduled === false) {
-        bseasy_v3_update_status(0, 100, 'Fehler: Konnte Explorer-Job nicht planen', 'error');
+        bes_sync_update_status(0, 100, 'Fehler: Konnte Explorer-Job nicht planen', 'error');
         wp_send_json_error(['error' => esc_html__('Konnte Explorer nicht starten. Bitte WP-Cron prüfen.', BES_TEXT_DOMAIN)]);
         return;
     }
@@ -175,7 +172,7 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
             }
             
             if ($deleted_count > 0) {
-                bseasy_v3_log("Bereinigung: $deleted_count alte Part-Dateien gelöscht (neuer Sync startet)", 'INFO');
+                bes_debug_log("Bereinigung: $deleted_count alte Part-Dateien gelöscht (neuer Sync startet)", 'INFO', 'ajax-v3');
             }
         }
     }
@@ -184,7 +181,7 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
     update_option(BES_V3_OPTION_PREFIX . 'current_part', $part);
     
     // Status setzen
-    bseasy_v3_update_status(0, 0, "Starte Durchlauf $part" . ($estimated_parts > 0 ? " von ~$estimated_parts" : "") . " ...", 'running', [
+    bes_sync_update_status(0, 0, "Starte Durchlauf $part" . ($estimated_parts > 0 ? " von ~$estimated_parts" : "") . " ...", 'running', [
         'current_part' => $part,
         'total_parts' => $estimated_parts
     ]);
@@ -197,7 +194,7 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
     $scheduled = wp_schedule_single_event(time(), $hook, $args);
     
     if ($scheduled === false) {
-        bseasy_v3_update_status(0, 0, 'Fehler: Konnte Cron-Job nicht planen', 'error');
+        bes_sync_update_status(0, 0, 'Fehler: Konnte Cron-Job nicht planen', 'error');
         wp_send_json_error(['error' => esc_html__('Konnte Sync nicht starten. Bitte WP-Cron prüfen.', BES_TEXT_DOMAIN)]);
         return;
     }
@@ -234,12 +231,7 @@ add_action('wp_ajax_bes_v3_status', function () {
         return;
     }
     
-    $file = BES_DATA_V3 . BES_V3_STATUS_FILE;
-    $data = ['state' => 'idle', 'progress' => 0];
-    
-    if (file_exists($file)) {
-        $data = bseasy_v3_read_json($file) ?: $data;
-    }
+    $data = bes_sync_get_status();
     
     // Berechne Progress als Prozent (0-100)
     if (isset($data['progress']) && isset($data['total']) && $data['total'] > 0) {
@@ -262,19 +254,14 @@ add_action('wp_ajax_bes_v3_status', function () {
     
     if ($explorer_running && (!isset($data['state']) || ($data['state'] !== 'done' && $data['state'] !== 'cancelled'))) {
         // Explorer läuft - aktualisiere Status falls vorhanden
-        if (file_exists($file)) {
-            $explorer_data = bseasy_v3_read_json($file);
-            if ($explorer_data && isset($explorer_data['state'])) {
-                $data = $explorer_data;
-                // Berechne Progress erneut für Explorer-Daten
-                if (isset($data['progress']) && isset($data['total']) && $data['total'] > 0) {
-                    $data['progress'] = (int)min(100, max(0, ($data['progress'] / $data['total']) * 100));
-                } elseif (isset($data['progress'])) {
-                    $data['progress'] = (int)min(100, max(0, $data['progress']));
-                }
-            } else {
-                $data['state'] = 'running';
-                $data['message'] = $data['message'] ?? 'API Explorer läuft...';
+        $explorer_data = bes_sync_get_status();
+        if (!empty($explorer_data['state'])) {
+            $data = $explorer_data;
+            // Berechne Progress erneut für Explorer-Daten
+            if (isset($data['progress']) && isset($data['total']) && $data['total'] > 0) {
+                $data['progress'] = (int)min(100, max(0, ($data['progress'] / $data['total']) * 100));
+            } elseif (isset($data['progress'])) {
+                $data['progress'] = (int)min(100, max(0, $data['progress']));
             }
         } else {
             $data['state'] = 'running';
@@ -325,16 +312,8 @@ add_action('wp_ajax_bes_v3_stop_sync', function () {
         return;
     }
     
-    $hook = BES_V3_CRON_HOOK;
-    bseasy_v3_update_status(0, 0, 'Sync wurde gestoppt', 'cancelled');
-    delete_option(BES_V3_OPTION_PREFIX . 'current_part');
-    
-    if (function_exists('wp_unschedule_hook')) {
-        wp_unschedule_hook($hook);
-    } else {
-        wp_clear_scheduled_hook($hook);
-    }
-    
+    bes_sync_cancel();
+
     wp_send_json_success(['message' => esc_html__('Sync wurde gestoppt.', BES_TEXT_DOMAIN)]);
 });
 
@@ -352,17 +331,7 @@ add_action('wp_ajax_bes_v3_stop_explorer', function () {
         return;
     }
     
-    // Setze Explorer-Status auf "cancelled"
-    bseasy_v3_update_status(0, 100, 'API Explorer wurde gestoppt', 'cancelled');
-    delete_option(BES_V3_OPTION_PREFIX . 'explorer_running');
-    
-    // Geplanten Explorer-Cron-Job entfernen
-    $hook = 'bes_run_explorer_v3';
-    if (function_exists('wp_unschedule_hook')) {
-        wp_unschedule_hook($hook);
-    } else {
-        wp_clear_scheduled_hook($hook);
-    }
+    bes_explorer_cancel();
     
     wp_send_json_success([
         'message' => esc_html__('API Explorer wurde gestoppt.', BES_TEXT_DOMAIN),
@@ -383,18 +352,8 @@ add_action('wp_ajax_bes_v3_reset_sync', function () {
         return;
     }
     
-    $hook = BES_V3_CRON_HOOK;
-    wp_clear_scheduled_hook($hook);
-    
-    $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
-    if (file_exists($status_file)) {
-        @unlink($status_file);
-    }
-    
-    delete_option(BES_V3_OPTION_PREFIX . 'current_part');
-    delete_option(BES_V3_OPTION_PREFIX . 'total_members');
-    delete_option(BES_V3_OPTION_PREFIX . 'last_error');
-    
+    bes_sync_reset();
+
     wp_send_json_success(['message' => esc_html__('Sync wurde zurückgesetzt.', BES_TEXT_DOMAIN)]);
 });
 
@@ -421,7 +380,7 @@ add_action('wp_ajax_bes_v3_merge_parts', function () {
         bes_clear_render_cache();
     }
     
-    $result = bseasy_v3_merge_parts();
+    $result = bes_sync_merge_parts();
     
     if ($result['success']) {
         update_option(BES_V3_OPTION_PREFIX . 'last_sync_time', current_time('mysql'));
@@ -454,18 +413,12 @@ add_action('wp_ajax_bes_v3_load_catalog', function () {
         return;
     }
     
-    $catalog_file = BES_DATA_V3 . BES_V3_FIELD_CATALOG;
-    if (!file_exists($catalog_file)) {
+    $catalog = bes_sync_get_catalog();
+    if (!$catalog) {
         wp_send_json_error(['error' => esc_html__('Feldkatalog nicht gefunden. Bitte führe zuerst den API Explorer aus.', BES_TEXT_DOMAIN)]);
         return;
     }
-    
-    $catalog = bseasy_v3_read_json($catalog_file);
-    if (!$catalog) {
-        wp_send_json_error(['error' => esc_html__('Konnte Feldkatalog nicht laden.', BES_TEXT_DOMAIN)]);
-        return;
-    }
-    
+
     wp_send_json_success(['catalog' => $catalog]);
 });
 
@@ -483,7 +436,7 @@ add_action('wp_ajax_bes_v3_load_selection', function () {
         return;
     }
     
-    $selection = bseasy_v3_load_selection();
+    $selection = bes_sync_get_selection();
     wp_send_json_success(['selection' => $selection]);
 });
 
@@ -517,7 +470,7 @@ add_action('wp_ajax_bes_v3_save_selection', function () {
         'updated_at' => date('c'),
     ];
     
-    if (bseasy_v3_save_selection($selection)) {
+    if (bes_sync_save_selection($selection)) {
         wp_send_json_success([
             'message' => esc_html__('Feldauswahl gespeichert.', BES_TEXT_DOMAIN),
             'field_count' => count($fields)
@@ -547,7 +500,7 @@ add_action('wp_ajax_bes_v3_reset_selection', function () {
         'updated_at' => date('c'),
     ];
     
-    if (bseasy_v3_save_selection($selection)) {
+    if (bes_sync_save_selection($selection)) {
         wp_send_json_success([
             'message' => esc_html__('Feldauswahl auf Pflichtfelder zurückgesetzt.', BES_TEXT_DOMAIN),
             'field_count' => count(BES_V3_REQUIRED_FIELDS)
@@ -578,7 +531,7 @@ add_action('wp_ajax_bes_v3_audit_consent', function () {
     }
     
     // Setze Audit-Status auf "running"
-    bseasy_v3_update_status(0, 100, "Consent-Audit wird gestartet...", 'running');
+    bes_sync_update_status(0, 100, "Consent-Audit wird gestartet...", 'running');
     update_option(BES_V3_OPTION_PREFIX . 'audit_running', true);
     
     // Plane WP-Cron-Job für sofortige Ausführung
@@ -591,7 +544,7 @@ add_action('wp_ajax_bes_v3_audit_consent', function () {
     $scheduled = wp_schedule_single_event(time(), $hook);
     
     if ($scheduled === false) {
-        bseasy_v3_update_status(0, 100, 'Fehler: Konnte Audit-Job nicht planen', 'error');
+        bes_sync_update_status(0, 100, 'Fehler: Konnte Audit-Job nicht planen', 'error');
         delete_option(BES_V3_OPTION_PREFIX . 'audit_running');
         wp_send_json_error(['error' => esc_html__('Konnte Audit nicht starten. Bitte WP-Cron prüfen.', BES_TEXT_DOMAIN)]);
         return;
@@ -633,32 +586,5 @@ add_action('wp_ajax_bes_v3_audit_status', function () {
         return;
     }
     
-    $audit_running = get_option(BES_V3_OPTION_PREFIX . 'audit_running', false);
-    $audit_file = BES_DATA_V3 . 'audit_consent_v3.json';
-    
-    $result = [
-        'running' => $audit_running,
-        'has_result' => file_exists($audit_file),
-        'audit_file' => $audit_file,
-    ];
-    
-    // Lade Status-Datei falls vorhanden
-    $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
-    if (file_exists($status_file)) {
-        $status_data = bseasy_v3_read_json($status_file);
-        if ($status_data && isset($status_data['message'])) {
-            $result['status_message'] = $status_data['message'];
-            $result['state'] = $status_data['state'] ?? 'unknown';
-        }
-    }
-    
-    // Lade Audit-Ergebnis falls vorhanden
-    if (file_exists($audit_file)) {
-        $audit_data = bseasy_v3_read_json($audit_file);
-        if ($audit_data) {
-            $result['audit'] = $audit_data;
-        }
-    }
-    
-    wp_send_json_success($result);
+    wp_send_json_success(bes_audit_get_status());
 });

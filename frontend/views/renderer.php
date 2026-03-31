@@ -28,39 +28,8 @@ require_once dirname(__DIR__) . '/includes/filter-helpers.php';
  */
 function bes_render_members(): string
 {
-  // Lade V3-Konstanten falls nötig
-  if (!defined('BES_DATA_V3')) {
-    if (defined('BES_DIR') && file_exists(BES_DIR . 'includes/constants-v3.php')) {
-      require_once BES_DIR . 'includes/constants-v3.php';
-    } else {
-      $constants_file = dirname(dirname(__DIR__)) . '/includes/constants-v3.php';
-      if (file_exists($constants_file)) {
-        require_once $constants_file;
-      }
-    }
-  }
-  
-  // V3 ist die einzige Quelle
-  $json_source = get_option('bes_json_source', 'v3');
-  // Stelle sicher, dass V3 gesetzt ist
-  if ($json_source !== 'v3') {
-    update_option('bes_json_source', 'v3');
-    $json_source = 'v3';
-  }
-  
-  $members_file = null;
-  
-  // V3-Datei laden
-  if (defined('BES_DATA_V3') && defined('BES_V3_MEMBERS_FILE')) {
-    $v3_file = BES_DATA_V3 . BES_V3_MEMBERS_FILE;
-    if (file_exists($v3_file) && filesize($v3_file) > 0) {
-      $members_file = $v3_file;
-    }
-  }
-  
-  // Kein Fallback zu V2 mehr - V3 ist die einzige Quelle
-  if (!$members_file) {
-    // V3-Datei fehlt - keine Daten verfügbar
+  // Mitgliederdaten über Repository prüfen (keine direkte Abhängigkeit zu sync/)
+  if (!function_exists('bes_members_file_exists') || !bes_members_file_exists()) {
     return '';
   }
   
@@ -82,16 +51,15 @@ function bes_render_members(): string
   }
   
   $cache_key = 'bes_members_render_' . md5(
-    $members_file . 
-    (file_exists($members_file) ? filemtime($members_file) : 0) . 
-    $config_file . 
+    bes_members_get_file_path() .
+    bes_members_get_file_mtime() .
+    $config_file .
     (file_exists($config_file) ? filemtime($config_file) : 0) .
     $renderer_file .
     (file_exists($renderer_file) ? filemtime($renderer_file) : 0) .
     $filter_helpers_file .
     (file_exists($filter_helpers_file) ? filemtime($filter_helpers_file) : 0) .
     (defined('BES_VERSION') ? BES_VERSION : '1.0') . // Plugin-Version
-    $json_source . // JSON-Quelle (V2/V3) für Cache-Trennung
     $design_settings_hash // Design-Settings für Cache-Invalidierung
   );
   
@@ -112,19 +80,17 @@ function bes_render_members(): string
   // ============================================================
   // VALIDIERUNG
   // ============================================================
-  if (!file_exists($members_file) || !file_exists($config_file)) {
+  if (!file_exists($config_file)) {
     $error_msg = '<div style="padding: 20px; background: #fee; border: 2px solid red; color: #333; margin: 20px;">';
-    $error_msg .= '<p style="font-weight: bold; color: red;">❌ Fehler: Benötigte Datendateien nicht gefunden!</p>';
+    $error_msg .= '<p style="font-weight: bold; color: red;">❌ Fehler: Konfigurationsdatei nicht gefunden!</p>';
     $error_msg .= '<p style="font-size: 12px; color: #666;">';
-    $error_msg .= '<strong>BES_DATA:</strong> ' . esc_html(BES_DATA) . '<br>';
-    $error_msg .= '<strong>members_file:</strong> ' . esc_html($members_file) . ' → ' . (file_exists($members_file) ? '✅ EXISTS' : '❌ MISSING') . '<br>';
-    $error_msg .= '<strong>config_file:</strong> ' . esc_html($config_file) . ' → ' . (file_exists($config_file) ? '✅ EXISTS' : '❌ MISSING') . '<br>';
+    $error_msg .= '<strong>config_file:</strong> ' . esc_html($config_file) . ' → ❌ MISSING<br>';
     $error_msg .= '</p>';
-    $error_msg .= '<p style="font-size: 11px; color: #999; margin-top: 10px;">Bitte führen Sie einen Sync im Plugin-Backend durch.</p>';
+    $error_msg .= '<p style="font-size: 11px; color: #999; margin-top: 10px;">Bitte prüfen Sie die Plugin-Einstellungen.</p>';
     $error_msg .= '</div>';
-    
+
     if (function_exists('bes_debug_log')) {
-      bes_debug_log('Dateien nicht gefunden: ' . $members_file . ' / ' . $config_file, 'ERROR', 'bes_render_members');
+      bes_debug_log('Konfigurationsdatei nicht gefunden: ' . $config_file, 'ERROR', 'bes_render_members');
     }
     return $error_msg;
   }
@@ -132,34 +98,33 @@ function bes_render_members(): string
   // ============================================================
   // DATEN LADEN
   // ============================================================
-  // ✅ Sichere File-Operation mit Pfad-Validierung
+  // Mitgliederdaten über Repository laden (keine direkte Abhängigkeit zu sync/)
+  $members = bes_members_get_all();
+
+  if (empty($members)) {
+    return '<p>Keine Mitgliederdaten gefunden.</p>';
+  }
+
+  // ✅ Konfiguration laden
   if (function_exists('bes_safe_file_get_contents')) {
-    $members_raw = bes_safe_file_get_contents($members_file, BES_DATA_V3);
     $config_raw = bes_safe_file_get_contents($config_file, BES_DATA);
   } else {
-    // Fallback für alte Versionen
-    $members_raw = file_get_contents($members_file);
     $config_raw = file_get_contents($config_file);
   }
-  
-  if ($members_raw === false || $members_raw === null || $config_raw === false || $config_raw === null) {
+
+  if ($config_raw === false || $config_raw === null) {
     if (function_exists('bes_debug_log')) {
-      bes_debug_log('Dateien konnten nicht gelesen werden', 'ERROR', 'bes_render_members');
+      bes_debug_log('Konfigurationsdatei konnte nicht gelesen werden', 'ERROR', 'bes_render_members');
     }
-    return '<p>Fehler beim Laden der Daten.</p>';
+    return '<p>Fehler beim Laden der Konfiguration.</p>';
   }
-  
+
   // ✅ JSON-Decode mit sofortiger Fehlerprüfung
   try {
     if (function_exists('bes_safe_json_decode')) {
-      $members_data = bes_safe_json_decode($members_raw, true);
       $config_data = bes_safe_json_decode($config_raw, true);
     } else {
-      // Fallback für alte Versionen
-      $members_data = json_decode($members_raw, true);
       $config_data = json_decode($config_raw, true);
-      
-      // ✅ Sofortige Prüfung nach json_decode()
       if (json_last_error() !== JSON_ERROR_NONE) {
         throw new Exception('JSON-Decode-Fehler: ' . json_last_error_msg());
       }
@@ -169,35 +134,15 @@ function bes_render_members(): string
     if (function_exists('bes_debug_log')) {
       bes_debug_log($error_msg, 'ERROR', 'bes_render_members');
     }
-    return '<div style="padding: 20px; background: #fee; border: 2px solid red; color: #333; margin: 20px;">'
-      . '<p style="font-weight: bold; color: red;">❌ Fehler beim Laden der Daten!</p>'
-      . '<p>' . esc_html($error_msg) . '</p>'
-      . '<p style="font-size: 11px; color: #999; margin-top: 10px;">Bitte führen Sie einen neuen Sync im Plugin-Backend durch.</p>'
-      . '</div>';
-  }
-  
-  // V3-Format: { "_meta": {...}, "data": [...] }
-  $members = [];
-  if (isset($members_data['data']) && is_array($members_data['data'])) {
-    $members = $members_data['data'];
-  } else {
-    // Ungültiges Format: 'data' fehlt oder ist kein Array
-    if (function_exists('bes_debug_log')) {
-      bes_debug_log('members_consent_v3.json: Ungültiges Format - "data" fehlt oder ist kein Array', 'WARN', 'bes_render_members');
-    }
-  }
-  
-  if (empty($members)) {
-    return '<p>Keine Mitgliederdaten gefunden.</p>';
+    return '<p>' . esc_html($error_msg) . '</p>';
   }
 
   bes_debug_log(
-    sprintf('Daten geladen: %d Mitglieder, %d Config-Items (Quelle: %s)', 
-      count($members), 
-      count($config_data ?? []),
-      $json_source
-    ), 
-    'DEBUG', 
+    sprintf('Daten geladen: %d Mitglieder, %d Config-Items',
+      count($members),
+      count($config_data ?? [])
+    ),
+    'DEBUG',
     'bes_render_members'
   );
   $config  = is_array($config_data) ? $config_data : [];
