@@ -53,6 +53,21 @@ if (file_exists(__DIR__ . '/v3-consent-audit.php')) {
 // ============================================================
 
 /**
+ * Sync-Status aktualisieren.
+ *
+ * @param int    $progress  Aktueller Fortschritt
+ * @param int    $total     Gesamtanzahl
+ * @param string $message   Status-Nachricht
+ * @param string $state     Status-Typ ('running', 'done', 'error', 'cancelled')
+ * @param array  $extra     Zusätzliche Daten (z. B. current_part, total_parts)
+ * @return bool Erfolg
+ */
+function bes_sync_update_status(int $progress, int $total, string $message = '', string $state = 'running', array $extra = []): bool
+{
+    return bseasy_v3_update_status($progress, $total, $message, $state, $extra);
+}
+
+/**
  * Sync-Durchlauf starten.
  *
  * @param int $offset Start-Offset
