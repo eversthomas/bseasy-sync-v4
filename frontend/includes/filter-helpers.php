@@ -280,6 +280,15 @@ function bes_render_filterbar(array $filter_fields, array $filter_values, array 
                             class="<?php echo $is_zip_field ? 'bes-filter-zip' : 'bes-filter-city'; ?>"
                             data-field="<?php echo esc_attr($fid); ?>"
                             placeholder="<?php echo $is_zip_field ? esc_attr__('PLZ eingeben...', 'bseasy-sync') : esc_attr__('Stadt eingeben...', 'bseasy-sync'); ?>">
+                        <div class="bes-radius-wrapper" style="display:none;" data-for-field="<?php echo esc_attr($fid); ?>">
+                            <select class="bes-radius-select" data-for-field="<?php echo esc_attr($fid); ?>">
+                                <option value="0"><?php esc_html_e('Exakt', 'bseasy-sync'); ?></option>
+                                <option value="10">10 km</option>
+                                <option value="25" selected>25 km</option>
+                                <option value="50">50 km</option>
+                                <option value="100">100 km</option>
+                            </select>
+                        </div>
                     <?php else : ?>
                         <select data-field="<?php echo esc_attr($fid); ?>">
                             <option value=""><?php esc_html_e('Alle', 'bseasy-sync'); ?></option>

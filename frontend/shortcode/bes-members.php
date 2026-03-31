@@ -77,6 +77,8 @@ add_shortcode('bes_members', function ($atts) {
     $plugin_version,
     true
   );
+  // defer: JS blockiert das Rendering nicht
+  wp_script_add_data('bes-frontend-script', 'defer', true);
 
   // ✅ AJAX-Variablen für Frontend (inkl. Nonce)
   wp_localize_script('bes-frontend-script', 'bes_ajax', [
@@ -241,21 +243,23 @@ add_shortcode('bes_members', function ($atts) {
   
   // Definiere erlaubte HTML-Tags für wp_kses (ERWEITERT für Map und Kalender)
   $allowed_html = array(
+    'article' => array('class' => true, 'data-member-id' => true),
+    'address' => array('class' => true),
     'div'    => array('class' => true, 'id' => true, 'style' => true, 'data-field' => true, 'data-id' => true, 'data-value' => true, 'data-view' => true, 'data-loaded' => true, 'data-limit' => true, 'data-map-markers' => true, 'data-map-filters' => true, 'data-map-settings' => true, 'data-uploads-url' => true),
     'label'  => array(),
     'input'  => array('type' => true, 'id' => true, 'placeholder' => true, 'class' => true, 'data-field' => true),
-    'select' => array('data-field' => true, 'class' => true),
+    'select' => array('data-field' => true, 'class' => true, 'data-for-field' => true),
     'option' => array('value' => true, 'selected' => true),
     'button' => array('id' => true, 'class' => true, 'data-view' => true, 'aria-expanded' => true, 'type' => true),
-    'img'    => array('src' => true, 'alt' => true, 'class' => true),
+    'img'    => array('src' => true, 'alt' => true, 'class' => true, 'loading' => true, 'decoding' => true, 'width' => true, 'height' => true),
     'a'      => array('href' => true, 'target' => true, 'rel' => true, 'class' => true),
     'strong' => array('class' => true),
-    'h2'     => array('class' => true),  // Für Kalender
+    'h2'     => array('class' => true),
     'h3'     => array('class' => true),
-    'h4'     => array('class' => true),  // Für Map-Popups
+    'h4'     => array('class' => true),
     'p'      => array('class' => true, 'style' => true),
     'span'   => array('class' => true),
-    'script' => array('type' => true, 'id' => true),  // KRITISCH: Für JSON-Daten in Map
+    'script' => array('type' => true, 'id' => true),  // KRITISCH: Für JSON-Daten (Map + Schema.org)
   );
   
   // Filter: Erlaube Entwicklern, erlaubte HTML-Tags anzupassen

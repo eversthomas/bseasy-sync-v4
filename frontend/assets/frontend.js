@@ -183,6 +183,101 @@ window.addEventListener("load", function () {
       );
 
       // ============================================
+      // 🔗 URL-Hash-Sync: Filter-State in URL speichern
+      // ============================================
+      function updateUrlHash() {
+        const parts = [];
+        const sv = $filterbar.find("#bes-search").val();
+        if (sv && sv.trim()) {
+          parts.push("search=" + encodeURIComponent(sv.trim()));
+        }
+        $filterbar.find("select, .bes-filter-zip, .bes-filter-city").each(function () {
+          const fid = String($(this).data("field") || "").trim();
+          const val = $(this).val();
+          if (fid && val && val.trim()) {
+            parts.push("f_" + encodeURIComponent(fid) + "=" + encodeURIComponent(val.trim()));
+          }
+        });
+        if (parts.length) {
+          history.replaceState(null, "", "#bes:" + parts.join("|"));
+        } else if (window.location.hash.startsWith("#bes:")) {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
+      }
+
+      function restoreFromUrlHash() {
+        const hash = window.location.hash;
+        if (!hash.startsWith("#bes:")) return;
+        const pairs = hash.slice(5).split("|");
+        pairs.forEach(function (pair) {
+          const eq = pair.indexOf("=");
+          if (eq === -1) return;
+          const k = decodeURIComponent(pair.slice(0, eq));
+          const v = decodeURIComponent(pair.slice(eq + 1));
+          if (!k || !v) return;
+          if (k === "search") {
+            $filterbar.find("#bes-search").val(v);
+          } else if (k.startsWith("f_")) {
+            const fid = k.slice(2);
+            $filterbar.find("[data-field='" + $.escapeSelector(fid) + "']").val(v);
+          }
+        });
+        console.log("🔗 Filter aus URL-Hash wiederhergestellt");
+      }
+
+      // ============================================
+      // 📍 Radius-Suche
+      // ============================================
+      let radiusAllowedIds = null; // null = kein Radius-Filter aktiv; Set = Whitelist
+
+      function runRadiusSearch(locationVal, radiusKm) {
+        if (!locationVal || !locationVal.trim() || radiusKm <= 0) {
+          radiusAllowedIds = null;
+          applyFilters();
+          return;
+        }
+        $.ajax({
+          url: bes_ajax.ajax_url,
+          type: "POST",
+          data: {
+            action: "bes_radius_search",
+            nonce: bes_ajax.nonce,
+            location: locationVal.trim(),
+            radius_km: radiusKm,
+          },
+          success: function (resp) {
+            if (resp.success && Array.isArray(resp.data.member_ids)) {
+              radiusAllowedIds = new Set(resp.data.member_ids);
+              console.log("📍 Radius-Filter: " + radiusAllowedIds.size + " Treffer (" + radiusKm + " km)");
+            } else {
+              radiusAllowedIds = new Set(); // Kein Treffer → alles ausblenden
+            }
+            applyFilters();
+          },
+          error: function () {
+            radiusAllowedIds = null;
+            applyFilters();
+          },
+        });
+      }
+
+      // Radius-Dropdown ein-/ausblenden je nach PLZ/Stadt-Eingabe
+      function updateRadiusVisibility($input) {
+        const fid = String($input.data("field") || "").trim();
+        const $wrapper = $filterbar.find(".bes-radius-wrapper[data-for-field='" + $.escapeSelector(fid) + "']");
+        if (!$wrapper.length) return;
+        if ($input.val() && $input.val().trim()) {
+          $wrapper.show();
+        } else {
+          $wrapper.hide();
+          // Radius zurücksetzen wenn Feld geleert wird
+          const $rs = $wrapper.find(".bes-radius-select");
+          $rs.val("25");
+          radiusAllowedIds = null;
+        }
+      }
+
+      // ============================================
       // 🏗️ Dropdowns aufbauen, PLZ-Feld ggf. zu Textfeld machen
       // ============================================
       // Debug: Logge alle Feld-IDs für Diagnose
@@ -430,25 +525,22 @@ window.addEventListener("load", function () {
                 .trim()
                 .toLowerCase();
 
-              if (filter.type === "zip") {
-                // PLZ: startsWith, sowohl auf data-value als auch Text
-                const candidates = rawAttr
-                  ? rawAttr.split("|").map(v => stripHtml(v.trim()).toLowerCase())
-                  : [fieldText];
-
-                const zipMatch = candidates.some(v => v.startsWith(filter.value));
-                if (!zipMatch) {
-                  visible = false;
-                  break;
+              if (filter.type === "zip" || filter.type === "city") {
+                // Wenn Radius-Filter aktiv → Geo-Check übernimmt, String-Matching überspringen
+                if (radiusAllowedIds !== null) {
+                  continue;
                 }
-              } else if (filter.type === "city") {
-                // Stadt: includes (wie normale Suche)
                 const candidates = rawAttr
                   ? rawAttr.split("|").map(v => stripHtml(v.trim()).toLowerCase())
                   : [fieldText];
 
-                const cityMatch = candidates.some(v => v.includes(filter.value));
-                if (!cityMatch) {
+                let locationMatch;
+                if (filter.type === "zip") {
+                  locationMatch = candidates.some(v => v.startsWith(filter.value));
+                } else {
+                  locationMatch = candidates.some(v => v.includes(filter.value));
+                }
+                if (!locationMatch) {
                   visible = false;
                   break;
                 }
@@ -475,6 +567,14 @@ window.addEventListener("load", function () {
                   break;
                 }
               }
+            }
+          }
+
+          // 3) Radius-Filter (server-seitig geocoded)
+          if (visible && radiusAllowedIds !== null) {
+            const memberId = String($card.data("member-id") || "").trim();
+            if (!memberId || !radiusAllowedIds.has(memberId)) {
+              visible = false;
             }
           }
 
@@ -518,6 +618,9 @@ window.addEventListener("load", function () {
         if (visibleCards.length > batchSize) {
           initInfiniteScroll(visibleCards);
         }
+
+        // Filter-State in URL-Hash speichern
+        updateUrlHash();
       }
 
       // ============================================
@@ -531,8 +634,34 @@ window.addEventListener("load", function () {
       
       // WICHTIG: Event-Handler für bereits vorhandene Input-Felder (PLZ/Stadt)
       // Diese werden bereits im PHP als Input gerendert und brauchen Event-Handler
-      $filterbar.find(".bes-filter-zip, .bes-filter-city").off("input").on("input", applyFilters);
-      
+      $filterbar.find(".bes-filter-zip, .bes-filter-city").off("input").on("input", function () {
+        updateRadiusVisibility($(this));
+        // Wenn Feld geleert → Radius deaktiviert, sofort filtern
+        // Wenn Feld hat Wert → erst bei Radius-Select-Change oder direkt (Exakt-Modus)
+        const fid = String($(this).data("field") || "").trim();
+        const $rs = $filterbar.find(".bes-radius-select[data-for-field='" + $.escapeSelector(fid) + "']");
+        const radiusKm = parseInt($rs.val() || "0", 10);
+        if (radiusAllowedIds === null || !$(this).val() || !$(this).val().trim()) {
+          // Kein Radius aktiv oder Feld leer → direkt filtern (String-Matching)
+          applyFilters();
+        } else {
+          // Radius war aktiv → neue Suche mit aktuellem Ort + bestehendem Radius
+          runRadiusSearch($(this).val(), radiusKm);
+        }
+      });
+
+      // Radius-Dropdown: Suche starten wenn Wert geändert wird
+      $filterbar.off("change.besRadius", ".bes-radius-select").on("change.besRadius", ".bes-radius-select", function () {
+        const fid = String($(this).data("for-field") || "").trim();
+        const $locationInput = $filterbar.find(
+          "[data-field='" + $.escapeSelector(fid) + "'].bes-filter-zip, " +
+          "[data-field='" + $.escapeSelector(fid) + "'].bes-filter-city"
+        );
+        const locationVal = $locationInput.val() || "";
+        const radiusKm = parseInt($(this).val(), 10) || 0;
+        runRadiusSearch(locationVal, radiusKm);
+      });
+
       console.log("✅ Event-Handler gebunden für:", {
         search: $search.length,
         selects: $filterbar.find("select").length,
@@ -543,6 +672,14 @@ window.addEventListener("load", function () {
         $search.val("");
         $filterbar.find("select").val("");
         $filterbar.find(".bes-filter-zip, .bes-filter-city").val("");
+        // Radius-Filter zurücksetzen
+        radiusAllowedIds = null;
+        $filterbar.find(".bes-radius-wrapper").hide();
+        $filterbar.find(".bes-radius-select").val("25");
+        // URL-Hash löschen
+        if (window.location.hash.startsWith("#bes:")) {
+          history.replaceState(null, "", window.location.pathname + window.location.search);
+        }
         console.log("🔄 Filter zurückgesetzt");
         
         // Marker entfernen (wird neu erstellt in showInitialCards)
@@ -554,8 +691,10 @@ window.addEventListener("load", function () {
 
       console.log("✅ Filter-Events gebunden");
       
+      // URL-Hash wiederherstellen (falls vorhanden) vor initialer Filterung
+      restoreFromUrlHash();
+
       // Initiale Filterung durchführen (falls bereits Werte gesetzt sind)
-      // Dies stellt sicher, dass die Anzeige korrekt ist, auch wenn Filter bereits Werte haben
       applyFilters();
     }
 
