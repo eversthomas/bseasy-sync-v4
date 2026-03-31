@@ -288,9 +288,15 @@ window.addEventListener("load", function () {
 
       $selects.each(function () {
         const $select = $(this);
+
+        // Radius-Selects haben data-for-field statt data-field → überspringen
+        if ($select.hasClass("bes-radius-select") || $select.data("for-field") !== undefined) {
+          return;
+        }
+
         // WICHTIG: Feld-ID trimmen und validieren
         let fieldId = String($select.data("field") || "").trim();
-        
+
         // Validierung: Feld-ID darf nicht leer sein
         if (!fieldId) {
           console.warn("⚠️ Select ohne gültiges data-field Attribut gefunden, überspringe");
@@ -446,6 +452,10 @@ window.addEventListener("load", function () {
 
         // Dropdown-Filter
         $filterbar.find("select").each(function () {
+          // Radius-Selects überspringen (haben data-for-field, nicht data-field)
+          if ($(this).hasClass("bes-radius-select") || $(this).data("for-field") !== undefined) {
+            return;
+          }
           // WICHTIG: Feld-ID trimmen für exakte Übereinstimmung
           const fieldId = String($(this).data("field") || "").trim();
           if (!fieldId) {
