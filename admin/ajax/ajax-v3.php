@@ -9,21 +9,8 @@
 
 if (!defined('ABSPATH')) exit;
 
-// Lade V3-Module
-require_once BES_DIR . 'sync/v3-helpers.php';
-// Stelle sicher, dass api-core-consent.php geladen wird (für bes_consent_norm_list)
-if (!function_exists('bes_consent_norm_list')) {
-    // Lade api-core-consent.php direkt, falls es noch nicht geladen wurde
-    if (!function_exists('bes_consent_api_get')) {
-        require_once BES_DIR . 'sync/api-core-consent-requests.php';
-    } else {
-        // bes_consent_api_get existiert bereits, aber bes_consent_norm_list fehlt
-        // Lade api-core-consent.php direkt
-        require_once BES_DIR . 'sync/api-core-consent.php';
-    }
-}
-require_once BES_DIR . 'sync/api-explorer-v3.php';
-require_once BES_DIR . 'sync/api-core-consent-v3.php';
+// Sync-Modul über Fassade laden (kein direkter Zugriff auf sync-interne Dateien)
+require_once BES_DIR . 'sync/sync-service.php';
 
 /**
  * AJAX: API Explorer ausführen (asynchron über WP-Cron)

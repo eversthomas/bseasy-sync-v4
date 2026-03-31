@@ -133,53 +133,17 @@ function bes_ajax_filter_members() {
     }
     $filters = $filtered_filters;
     
-    // Lade V3-Konstanten falls nötig
-    if (!defined('BES_DATA_V3')) {
-        if (defined('BES_DIR') && file_exists(BES_DIR . 'includes/constants-v3.php')) {
-            require_once BES_DIR . 'includes/constants-v3.php';
-        } else {
-            $constants_file = dirname(__DIR__, 2) . '/includes/constants-v3.php';
-            if (file_exists($constants_file)) {
-                require_once $constants_file;
-            }
-        }
+    // Mitgliederdaten über Repository laden (keine direkte Abhängigkeit zu sync/)
+    if (!function_exists('bes_members_file_exists') || !bes_members_file_exists()) {
+        wp_send_json_error([
+            'error' => esc_html__('V3-Datei fehlt oder ist leer. Bitte führe einen V3 Sync durch.', 'besync')
+        ]);
+        return;
     }
-    
-    // V3 ist die einzige Quelle
-    $json_source = get_option('bes_json_source', 'v3');
-    // Stelle sicher, dass V3 gesetzt ist
-    if ($json_source !== 'v3') {
-        update_option('bes_json_source', 'v3');
-        $json_source = 'v3';
-    }
-    
-    $members_data = null;
-    $members = null;
-    
-    // V3-Datei laden
-    if (defined('BES_DATA_V3') && defined('BES_V3_MEMBERS_FILE')) {
-        $v3_file = BES_DATA_V3 . BES_V3_MEMBERS_FILE;
-        if (file_exists($v3_file) && filesize($v3_file) > 0) {
-            // Lade V3-Helpers falls nötig
-            if (!function_exists('bseasy_v3_read_json')) {
-                $helpers_file = dirname(__DIR__, 2) . '/sync/v3-helpers.php';
-                if (file_exists($helpers_file)) {
-                    require_once $helpers_file;
-                }
-            }
-            
-            if (function_exists('bseasy_v3_read_json')) {
-                $members_data = bseasy_v3_read_json($v3_file);
-                // V3-Format: { "_meta": {...}, "data": [...] }
-                if (isset($members_data['data']) && is_array($members_data['data'])) {
-                    $members = $members_data['data'];
-                }
-            }
-        }
-    }
-    
-    // Kein Fallback zu V2 mehr - V3 ist die einzige Quelle
-    if (!$members) {
+
+    $members = bes_members_get_all();
+
+    if (empty($members)) {
         wp_send_json_error([
             'error' => esc_html__('V3-Datei fehlt oder ist leer. Bitte führe einen V3 Sync durch.', 'besync')
         ]);
