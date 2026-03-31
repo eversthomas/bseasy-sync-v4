@@ -219,7 +219,9 @@ window.addEventListener("load", function () {
             $filterbar.find("#bes-search").val(v);
           } else if (k.startsWith("f_")) {
             const fid = k.slice(2);
-            $filterbar.find("[data-field='" + $.escapeSelector(fid) + "']").val(v);
+            $filterbar.find("[data-field]").filter(function () {
+              return String($(this).data("field") || "").trim() === fid;
+            }).val(v);
           }
         });
         console.log("🔗 Filter aus URL-Hash wiederhergestellt");
@@ -264,7 +266,9 @@ window.addEventListener("load", function () {
       // Radius-Dropdown ein-/ausblenden je nach PLZ/Stadt-Eingabe
       function updateRadiusVisibility($input) {
         const fid = String($input.data("field") || "").trim();
-        const $wrapper = $filterbar.find(".bes-radius-wrapper[data-for-field='" + $.escapeSelector(fid) + "']");
+        const $wrapper = $filterbar.find(".bes-radius-wrapper").filter(function () {
+          return $(this).data("for-field") === fid;
+        });
         if (!$wrapper.length) return;
         if ($input.val() && $input.val().trim()) {
           $wrapper.show();
@@ -649,7 +653,9 @@ window.addEventListener("load", function () {
         // Wenn Feld geleert → Radius deaktiviert, sofort filtern
         // Wenn Feld hat Wert → erst bei Radius-Select-Change oder direkt (Exakt-Modus)
         const fid = String($(this).data("field") || "").trim();
-        const $rs = $filterbar.find(".bes-radius-select[data-for-field='" + $.escapeSelector(fid) + "']");
+        const $rs = $filterbar.find(".bes-radius-select").filter(function () {
+          return $(this).data("for-field") === fid;
+        });
         const radiusKm = parseInt($rs.val() || "0", 10);
         if (radiusAllowedIds === null || !$(this).val() || !$(this).val().trim()) {
           // Kein Radius aktiv oder Feld leer → direkt filtern (String-Matching)
@@ -663,10 +669,9 @@ window.addEventListener("load", function () {
       // Radius-Dropdown: Suche starten wenn Wert geändert wird
       $filterbar.off("change.besRadius", ".bes-radius-select").on("change.besRadius", ".bes-radius-select", function () {
         const fid = String($(this).data("for-field") || "").trim();
-        const $locationInput = $filterbar.find(
-          "[data-field='" + $.escapeSelector(fid) + "'].bes-filter-zip, " +
-          "[data-field='" + $.escapeSelector(fid) + "'].bes-filter-city"
-        );
+        const $locationInput = $filterbar.find(".bes-filter-zip, .bes-filter-city").filter(function () {
+          return String($(this).data("field") || "").trim() === fid;
+        });
         const locationVal = $locationInput.val() || "";
         const radiusKm = parseInt($(this).val(), 10) || 0;
         runRadiusSearch(locationVal, radiusKm);
