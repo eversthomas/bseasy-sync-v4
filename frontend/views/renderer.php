@@ -577,15 +577,16 @@ function bes_render_members(): string
       $img_path = BES_IMG . $id . '.png';
       $img_url  = BES_UPLOADS_URL . 'img/' . $id . '.png';
       
-      // Lazy-Loading: Nur für Cards ab Index 25 (erste 25 werden sofort geladen)
-      $loading_attr = ($card_index >= 25) ? 'loading="lazy"' : '';
+      // Lazy-Loading: Erste Karte eager (LCP-Bild), alle weiteren lazy
+      $loading_attr = ($card_index === 0) ? 'loading="eager"' : 'loading="lazy"';
       
       // ALT-Text: Vollständiger Name des Mitglieds
       $alt_text = $get_member_name($member);
       
       $card_index++;
       ?>
-      <div class="bes-card bes-member-card">
+      <article class="bes-card bes-member-card" data-member-id="<?php echo esc_attr($id); ?>">
+        <h2 class="bes-sr-only"><?php echo $alt_text; ?></h2>
         <div class="bes-member-content">
           <div class="bes-fields-top">
             <?php if (file_exists($img_path)): ?>
@@ -607,7 +608,8 @@ function bes_render_members(): string
             </div>
           <?php endif; ?>
         </div>
-      </div>
+        <?php echo bes_generate_member_schema_tag($member, $alt_text, $id, (file_exists($img_path) ? $img_url : '')); ?>
+      </article>
     <?php endforeach; ?>
   </div>
 
