@@ -1,6 +1,19 @@
 <?php
 /**
- * Lädt Plugin-Bootstrap: Includes, Module, Hooks (ohne Lifecycle-Registrierung).
+ * Plugin-Bootstrap: Ladereihenfolge aller Module.
+ *
+ * Architekturregeln (V4):
+ *  - includes/   → immer geladen (Infrastruktur, geteilt)
+ *  - sync/        → nur in Admin/Cron; Einstiegspunkt: sync/sync-service.php
+ *  - admin/       → nur in Admin/Cron
+ *  - frontend/    → immer geladen (Shortcode, AJAX, Rendering)
+ *
+ * Kopplungsregeln:
+ *  - admin/ und frontend/ dürfen NUR sync/sync-service.php einbinden, keine
+ *    sync-internen Dateien direkt.
+ *  - Mitgliederdaten werden ausschließlich über includes/data/member-repository.php
+ *    gelesen.
+ *  - Design-Einstellungen liegen in includes/design/design-settings.php (geteilt).
  *
  * @package BSEasySync
  */
@@ -51,32 +64,39 @@ if (file_exists(BES_DIR . 'includes/hosting-compatibility.php')) {
 
 /**
  * ------------------------------------------------------------
- *  🔩 CORE-FUNKTIONEN & CRON
+ *  🗂️ GEMEINSAME RESSOURCEN (immer laden)
+ *  Konstanten, Repository, Design – werden von allen Modulen benötigt.
  * ------------------------------------------------------------
  */
 if (file_exists(BES_DIR . 'includes/constants-v3.php')) {
     require_once BES_DIR . 'includes/constants-v3.php';
 }
 
-// Lade V3-Module (nur im Admin oder bei Cron)
+// Datenzugriffsschicht: Mitgliederdaten (Frontend + Admin + AJAX)
+if (file_exists(BES_DIR . 'includes/data/member-repository.php')) {
+    require_once BES_DIR . 'includes/data/member-repository.php';
+}
+
+// Design-Einstellungen (Frontend + Admin)
+if (file_exists(BES_DIR . 'includes/design/design-settings.php')) {
+    require_once BES_DIR . 'includes/design/design-settings.php';
+}
+
+/**
+ * ------------------------------------------------------------
+ *  🔩 SYNC-MODUL & ADMIN-AJAX (nur in Admin-Kontext oder WP-Cron)
+ *  Einstiegspunkt: sync/sync-service.php (kapselt alle internen Dateien).
+ * ------------------------------------------------------------
+ */
 if (is_admin() || wp_doing_cron()) {
-    if (file_exists(BES_DIR . 'sync/v3-helpers.php')) {
-        require_once BES_DIR . 'sync/v3-helpers.php';
+    if (file_exists(BES_DIR . 'sync/sync-service.php')) {
+        require_once BES_DIR . 'sync/sync-service.php';
     }
-    if (file_exists(BES_DIR . 'sync/api-explorer-v3.php')) {
-        require_once BES_DIR . 'sync/api-explorer-v3.php';
-    }
-    if (file_exists(BES_DIR . 'sync/api-core-consent-v3.php')) {
-        require_once BES_DIR . 'sync/api-core-consent-v3.php';
-    }
-    if (file_exists(BES_DIR . 'sync/cron-v3.php')) {
-        require_once BES_DIR . 'sync/cron-v3.php';
+    if (file_exists(BES_DIR . 'sync/runtime/cron-v3.php')) {
+        require_once BES_DIR . 'sync/runtime/cron-v3.php';
     }
     if (file_exists(BES_DIR . 'admin/ajax/ajax-v3.php')) {
         require_once BES_DIR . 'admin/ajax/ajax-v3.php';
-    }
-    if (file_exists(BES_DIR . 'sync/v3-consent-audit.php')) {
-        require_once BES_DIR . 'sync/v3-consent-audit.php';
     }
 }
 
@@ -131,9 +151,9 @@ if (file_exists(BES_DIR . 'admin/fields/includes/field-label-generator.php')) {
 if (file_exists(BES_DIR . 'admin/fields/includes/fields-template.php')) {
     require_once BES_DIR . 'admin/fields/includes/fields-template.php';
 }
-if (file_exists(BES_DIR . 'admin/fields/includes/design-settings.php')) {
-    require_once BES_DIR . 'admin/fields/includes/design-settings.php';
-}
+// Hinweis: design-settings.php wird bereits weiter oben als gemeinsame Ressource geladen
+// (includes/design/design-settings.php). Der Stub admin/fields/includes/design-settings.php
+// ist nur noch für direkten Aufruf aus altem Code vorhanden.
 
 /**
  * ------------------------------------------------------------
