@@ -43,7 +43,7 @@ function bes_haversine_distance(float $lat1, float $lon1, float $lat2, float $lo
  * @param string $query  PLZ oder Stadtname, z. B. "75173" oder "Pforzheim"
  * @return array|null    ['lat' => float, 'lng' => float] oder null
  */
-function bes_geocode_nominatim(string $query): ?array
+function bes_geocode_location_query(string $query): ?array
 {
     $query = trim($query);
     if (empty($query)) {
@@ -132,7 +132,7 @@ function bes_handle_radius_search(): void
     }
 
     // Geocode
-    $center = bes_geocode_nominatim($location);
+    $center = bes_geocode_location_query($location);
     if (!$center) {
         wp_send_json_error(['error' => __('Ort konnte nicht gefunden werden.', BES_TEXT_DOMAIN)]);
         return;
