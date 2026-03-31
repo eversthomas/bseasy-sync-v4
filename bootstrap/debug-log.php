@@ -108,7 +108,6 @@ function bes_wp_error_handler($errno, $errstr, $errfile, $errline) {
             break;
         case E_NOTICE:
         case E_USER_NOTICE:
-        case E_STRICT:
             $level = 'INFO';
             break;
         case E_DEPRECATED:
