@@ -245,7 +245,7 @@ add_shortcode('bes_members', function ($atts) {
   $allowed_html = array(
     'article' => array('class' => true, 'data-member-id' => true),
     'address' => array('class' => true),
-    'div'    => array('class' => true, 'id' => true, 'style' => true, 'data-field' => true, 'data-id' => true, 'data-value' => true, 'data-view' => true, 'data-loaded' => true, 'data-limit' => true, 'data-map-markers' => true, 'data-map-filters' => true, 'data-map-settings' => true, 'data-uploads-url' => true),
+    'div'    => array('class' => true, 'id' => true, 'style' => true, 'data-field' => true, 'data-for-field' => true, 'data-id' => true, 'data-value' => true, 'data-view' => true, 'data-loaded' => true, 'data-limit' => true, 'data-map-markers' => true, 'data-map-filters' => true, 'data-map-settings' => true, 'data-uploads-url' => true),
     'label'  => array(),
     'input'  => array('type' => true, 'id' => true, 'placeholder' => true, 'class' => true, 'data-field' => true),
     'select' => array('data-field' => true, 'class' => true, 'data-for-field' => true),
