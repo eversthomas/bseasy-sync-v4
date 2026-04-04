@@ -233,7 +233,17 @@ window.addEventListener("load", function () {
       let radiusAllowedIds = null; // null = kein Radius-Filter aktiv; Set = Whitelist
 
       function runRadiusSearch(locationVal, radiusKm) {
-        if (!locationVal || !locationVal.trim() || radiusKm <= 0) {
+        const q = (locationVal || "").trim();
+        if (!q || radiusKm <= 0) {
+          radiusAllowedIds = null;
+          applyFilters();
+          return;
+        }
+        // Mindestlänge: PLZ braucht >= 4 Ziffern, Stadtname >= 3 Zeichen
+        const isNumeric = /^\d+$/.test(q);
+        const minLen = isNumeric ? 4 : 3;
+        if (q.length < minLen) {
+          // Eingabe zu kurz für Geocoding → kein Radius, reines String-Matching
           radiusAllowedIds = null;
           applyFilters();
           return;
@@ -270,11 +280,14 @@ window.addEventListener("load", function () {
           return $(this).data("for-field") === fid;
         });
         if (!$wrapper.length) return;
-        if ($input.val() && $input.val().trim()) {
+        const v = ($input.val() || "").trim();
+        const isNum = /^\d+$/.test(v);
+        const minLen = isNum ? 4 : 3;
+        if (v.length >= minLen) {
           $wrapper.show();
         } else {
           $wrapper.hide();
-          // Radius zurücksetzen wenn Feld geleert wird
+          // Radius zurücksetzen wenn Feld geleert oder zu kurz
           const $rs = $wrapper.find(".bes-radius-select");
           $rs.val("25");
           radiusAllowedIds = null;
