@@ -249,10 +249,10 @@ window.addEventListener("load", function () {
           },
           success: function (resp) {
             if (resp.success && Array.isArray(resp.data.member_ids)) {
-              radiusAllowedIds = new Set(resp.data.member_ids);
+              radiusAllowedIds = new Set(resp.data.member_ids.map(String));
               console.log("📍 Radius-Filter: " + radiusAllowedIds.size + " Treffer (" + radiusKm + " km)");
             } else {
-              radiusAllowedIds = new Set(); // Kein Treffer → alles ausblenden
+              radiusAllowedIds = null; // Geocoding fehlgeschlagen → Fallback auf String-Matching
             }
             applyFilters();
           },
