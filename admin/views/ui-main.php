@@ -19,6 +19,7 @@ if (defined('WP_DEBUG') && WP_DEBUG && function_exists('bes_write_debug_log')) {
 ?>
 <div class="wrap bes-admin">
     <h1>BSEasy Sync</h1>
+    <?php settings_errors('bes_settings'); ?>
     <nav class="bes-tabs">
         <button type="button" class="active" data-tab="felder">Felder</button>
         <button type="button" data-tab="kalender">Kalender</button>

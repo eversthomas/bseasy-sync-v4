@@ -36,14 +36,18 @@ function bseasy_v3_update_status(int $progress, int $total, string $message = ''
     if (!file_exists(BES_DATA_V3)) {
         if (function_exists('wp_mkdir_p')) {
             wp_mkdir_p(BES_DATA_V3);
-            @chmod(BES_DATA_V3, 0755);
+            if (!chmod(BES_DATA_V3, 0755)) {
+                bes_debug_log('chmod fehlgeschlagen: ' . BES_DATA_V3, 'WARN', 'filesystem');
+            }
         } else {
-            @mkdir(BES_DATA_V3, 0755, true);
+            if (!mkdir(BES_DATA_V3, 0755, true)) {
+                bes_debug_log('mkdir fehlgeschlagen: ' . BES_DATA_V3, 'ERROR', 'filesystem');
+            }
         }
     }
-    
+
     $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
-    
+
     $data = array_merge([
         'state' => $state,
         'progress' => $progress,
@@ -57,8 +61,11 @@ function bseasy_v3_update_status(int $progress, int $total, string $message = ''
         'last_error' => get_option(BES_V3_OPTION_PREFIX . 'last_error', null),
     ], $extra);
     
-    $result = @file_put_contents($status_file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
-    
+    $result = file_put_contents($status_file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+    if ($result === false) {
+        bes_debug_log('Schreibfehler Status-Datei: ' . $status_file, 'ERROR', 'filesystem');
+    }
+
     // Speichere auch in Historie
     bseasy_v3_save_history($data);
     
@@ -80,7 +87,11 @@ function bseasy_v3_save_history(array $status_data): bool {
     $history = [];
     
     if (file_exists($history_file)) {
-        $history = json_decode(@file_get_contents($history_file), true) ?: [];
+        $raw = file_get_contents($history_file);
+        if ($raw === false) {
+            bes_debug_log('Lesefehler Historien-Datei: ' . $history_file, 'WARN', 'filesystem');
+        }
+        $history = json_decode($raw ?: '', true) ?: [];
     }
     
     // Füge neuen Eintrag hinzu (nur bei Status-Wechsel)
@@ -93,7 +104,11 @@ function bseasy_v3_save_history(array $status_data): bool {
             $history = array_slice($history, -10);
         }
         
-        return @file_put_contents($history_file, json_encode($history, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false;
+        $written = file_put_contents($history_file, json_encode($history, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), LOCK_EX);
+        if ($written === false) {
+            bes_debug_log('Schreibfehler Historien-Datei: ' . $history_file, 'ERROR', 'filesystem');
+        }
+        return $written !== false;
     }
     
     return true;
@@ -120,24 +135,33 @@ function bseasy_v3_safe_write_json(string $file, string $content): bool {
     if (!file_exists($dir)) {
         if (function_exists('wp_mkdir_p')) {
             wp_mkdir_p($dir);
-            @chmod($dir, 0755);
+            if (!chmod($dir, 0755)) {
+                bes_debug_log('chmod fehlgeschlagen: ' . $dir, 'WARN', 'filesystem');
+            }
         } else {
-            @mkdir($dir, 0755, true);
+            if (!mkdir($dir, 0755, true)) {
+                bes_debug_log('mkdir fehlgeschlagen: ' . $dir, 'ERROR', 'filesystem');
+            }
         }
     }
-    
+
     // Temporäre Datei
     $tmp_file = $file . '.tmp';
-    
+
     // Schreibe in temporäre Datei
-    $result = @file_put_contents($tmp_file, $content, LOCK_EX);
-    
+    $result = file_put_contents($tmp_file, $content, LOCK_EX);
+
     if ($result === false) {
+        bes_debug_log('Schreibfehler tmp-Datei: ' . $tmp_file, 'ERROR', 'filesystem');
         return false;
     }
-    
+
     // Atomisches Umbenennen
-    return @rename($tmp_file, $file);
+    if (!rename($tmp_file, $file)) {
+        bes_debug_log('rename fehlgeschlagen: ' . $tmp_file . ' → ' . $file, 'ERROR', 'filesystem');
+        return false;
+    }
+    return true;
 }
 
 /**
@@ -151,8 +175,9 @@ function bseasy_v3_read_json(string $file): ?array {
         return null;
     }
     
-    $content = @file_get_contents($file);
+    $content = file_get_contents($file);
     if ($content === false) {
+        bes_debug_log('Lesefehler JSON-Datei: ' . $file, 'WARN', 'filesystem');
         return null;
     }
     
@@ -295,18 +320,24 @@ function bseasy_v3_setup_directories(): bool {
     if (!file_exists(BES_DATA_V3)) {
         if (function_exists('wp_mkdir_p')) {
             wp_mkdir_p(BES_DATA_V3);
-            @chmod(BES_DATA_V3, 0755);
+            if (!chmod(BES_DATA_V3, 0755)) {
+                bes_debug_log('chmod fehlgeschlagen: ' . BES_DATA_V3, 'WARN', 'filesystem');
+            }
         } else {
-            @mkdir(BES_DATA_V3, 0755, true);
+            if (!mkdir(BES_DATA_V3, 0755, true)) {
+                bes_debug_log('mkdir fehlgeschlagen: ' . BES_DATA_V3, 'ERROR', 'filesystem');
+            }
         }
     }
-    
+
     // Erstelle index.php (Schutz vor Directory Listing)
     $index_file = BES_DATA_V3 . 'index.php';
     if (!file_exists($index_file)) {
-        @file_put_contents($index_file, "<?php\n// Silence is golden.\n");
+        if (file_put_contents($index_file, "<?php\n// Silence is golden.\n") === false) {
+            bes_debug_log('Schreibfehler index.php: ' . $index_file, 'WARN', 'filesystem');
+        }
     }
-    
+
     // Erstelle .htaccess (Schutz vor direktem Zugriff)
     $htaccess_file = BES_DATA_V3 . '.htaccess';
     if (!file_exists($htaccess_file)) {
@@ -315,7 +346,9 @@ function bseasy_v3_setup_directories(): bool {
         $htaccess_content .= "    Order allow,deny\n";
         $htaccess_content .= "    Deny from all\n";
         $htaccess_content .= "</FilesMatch>\n";
-        @file_put_contents($htaccess_file, $htaccess_content);
+        if (file_put_contents($htaccess_file, $htaccess_content) === false) {
+            bes_debug_log('Schreibfehler .htaccess: ' . $htaccess_file, 'WARN', 'filesystem');
+        }
     }
     
     return true;

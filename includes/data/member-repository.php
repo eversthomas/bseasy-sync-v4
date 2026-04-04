@@ -33,9 +33,17 @@ function bes_members_get_all(): array
         return [];
     }
 
-    $raw = function_exists('bes_safe_file_get_contents')
-        ? bes_safe_file_get_contents($file, BES_DATA_V3)
-        : @file_get_contents($file);
+    if (function_exists('bes_safe_file_get_contents')) {
+        $raw = bes_safe_file_get_contents($file, BES_DATA_V3);
+    } else {
+        $raw = file_get_contents($file);
+        if ($raw === false) {
+            if (function_exists('bes_debug_log')) {
+                bes_debug_log('Lesefehler Mitglieder-Datei: ' . $file, 'ERROR', 'filesystem');
+            }
+            return [];
+        }
+    }
 
     if (empty($raw)) {
         return [];

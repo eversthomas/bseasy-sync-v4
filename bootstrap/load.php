@@ -98,10 +98,9 @@ if (is_admin() || wp_doing_cron()) {
     if (file_exists(BES_DIR . 'admin/ajax/ajax-v3.php')) {
         require_once BES_DIR . 'admin/ajax/ajax-v3.php';
     }
-}
-
-if (file_exists(BES_DIR . 'admin/calendar-handler.php')) {
-    require_once BES_DIR . 'admin/calendar-handler.php';
+    if (file_exists(BES_DIR . 'admin/calendar-handler.php')) {
+        require_once BES_DIR . 'admin/calendar-handler.php';
+    }
 }
 
 /**

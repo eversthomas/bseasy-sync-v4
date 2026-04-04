@@ -165,7 +165,7 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
             $deleted_count = 0;
             if ($part_files && is_array($part_files)) {
                 foreach ($part_files as $part_file) {
-                    if (file_exists($part_file) && @unlink($part_file)) {
+                    if (file_exists($part_file) && unlink($part_file)) {
                         $deleted_count++;
                     }
                 }

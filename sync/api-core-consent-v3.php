@@ -673,7 +673,9 @@ function bseasy_v3_process_member_batch(
                     if (function_exists('wp_mkdir_p')) {
                         wp_mkdir_p(BES_IMG);
                     } else {
-                        @mkdir(BES_IMG, 0755, true);
+                        if (!mkdir(BES_IMG, 0755, true)) {
+                            bes_debug_log('mkdir fehlgeschlagen: ' . BES_IMG, 'ERROR', 'filesystem');
+                        }
                     }
                 }
                 
@@ -707,13 +709,20 @@ function bseasy_v3_process_member_batch(
                     // Lösche alte Dateien
                     $old_files = glob(BES_IMG . $img_id . '.*');
                     if ($old_files !== false) {
-                        foreach ($old_files as $old_file) @unlink($old_file);
+                        foreach ($old_files as $old_file) {
+                            if (file_exists($old_file) && !unlink($old_file)) {
+                                bes_debug_log('unlink fehlgeschlagen: ' . $old_file, 'WARN', 'filesystem');
+                            }
+                        }
                     }
                     
                     $img_path = BES_IMG . $img_id . '.' . $ext;
                     $write_result = function_exists('bes_safe_file_put_contents')
                         ? bes_safe_file_put_contents($img_path, $body)
-                        : @file_put_contents($img_path, $body);
+                        : file_put_contents($img_path, $body);
+                    if ($write_result === false) {
+                        bes_debug_log('Schreibfehler Bild: ' . $img_path, 'ERROR', 'filesystem');
+                    }
                     
                     if ($write_result !== false) {
                         bseasy_v3_log("✓ Profilbild für Member $memberId heruntergeladen", 'INFO');

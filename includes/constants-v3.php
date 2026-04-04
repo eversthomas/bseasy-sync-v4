@@ -45,6 +45,10 @@ if (!defined('BES_V3_MEMBERS_FILE')) {
     define('BES_V3_MEMBERS_FILE', 'members_consent_v3.json');
 }
 
+if (!defined('BES_V3_MEMBERS_PART_PREFIX')) {
+    define('BES_V3_MEMBERS_PART_PREFIX', 'members_consent_v3_part');
+}
+
 if (!defined('BES_V3_STATUS_FILE')) {
     define('BES_V3_STATUS_FILE', 'status_v3.json');
 }

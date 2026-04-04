@@ -54,11 +54,15 @@ function bes_plugin_activate() {
     if (function_exists('wp_mkdir_p') && defined('BES_DATA') && BES_DATA) {
         if (!file_exists(BES_DATA)) {
             wp_mkdir_p(BES_DATA);
-            @chmod(BES_DATA, 0755);
+            if (!chmod(BES_DATA, 0755)) {
+                bes_debug_log('chmod fehlgeschlagen: ' . BES_DATA, 'WARN', 'filesystem');
+            }
         }
         if (defined('BES_IMG') && BES_IMG && !file_exists(BES_IMG)) {
             wp_mkdir_p(BES_IMG);
-            @chmod(BES_IMG, 0755);
+            if (!chmod(BES_IMG, 0755)) {
+                bes_debug_log('chmod fehlgeschlagen: ' . BES_IMG, 'WARN', 'filesystem');
+            }
         }
         // V2-Verzeichnisse werden nicht mehr erstellt (nur noch V3)
     }
@@ -88,8 +92,8 @@ function bes_plugin_deactivate() {
     // Legacy-Cleanup: Lösche alte V2-Status-Dateien (falls noch vorhanden)
     // V2 wurde entfernt, aber alte Dateien könnten noch existieren
     $status_file = BES_DATA . 'status.json';
-    if (file_exists($status_file)) {
-        @unlink($status_file);
+    if (file_exists($status_file) && !unlink($status_file)) {
+        bes_debug_log('unlink fehlgeschlagen: ' . $status_file, 'WARN', 'filesystem');
     }
 
     // Lösche Render-Cache
@@ -114,7 +118,9 @@ function bes_migrate_to_versioned_dirs() {
     // Stelle sicher, dass V2-Verzeichnis existiert
     if (defined('BES_DATA_V2') && !file_exists(BES_DATA_V2)) {
         wp_mkdir_p(BES_DATA_V2);
-        @chmod(BES_DATA_V2, 0755);
+        if (!chmod(BES_DATA_V2, 0755)) {
+            bes_debug_log('chmod fehlgeschlagen: ' . BES_DATA_V2, 'WARN', 'filesystem');
+        }
     }
 
     $migration_performed = false;
@@ -126,7 +132,7 @@ function bes_migrate_to_versioned_dirs() {
             $filename = basename($file);
             $new_path = BES_DATA_V2 . $filename;
             if (file_exists($file) && !file_exists($new_path)) {
-                if (@rename($file, $new_path)) {
+                if (rename($file, $new_path)) {
                     $migration_performed = true;
                 }
             }

@@ -37,9 +37,6 @@ define('BES_TEXT_DOMAIN', 'besync');
 if (!defined('BES_DIR')) {
     define('BES_DIR', plugin_dir_path(__FILE__));
 }
-if (!defined('BES_PATH')) {
-    define('BES_PATH', plugin_dir_path(__FILE__));
-}
 if (!defined('BES_URL')) {
     define('BES_URL', plugin_dir_url(__FILE__));
 }
@@ -97,18 +94,23 @@ if (!defined('BES_IMG')) {
 if (!defined('WP_INSTALLING') && function_exists('wp_mkdir_p') && defined('BES_DATA') && BES_DATA) {
     if (!file_exists(BES_DATA)) {
         if (function_exists('bes_ensure_writable_directory')) {
-            @bes_ensure_writable_directory(BES_DATA, 0755);
+            bes_ensure_writable_directory(BES_DATA, 0755);
         } else {
-            @wp_mkdir_p(BES_DATA);
-            @chmod(BES_DATA, 0755);
+            wp_mkdir_p(BES_DATA);
+            if (!chmod(BES_DATA, 0755)) {
+                // Hosting erlaubt chmod ggf. nicht – kein fataler Fehler
+                error_log('BSEasy Sync: chmod fehlgeschlagen für ' . BES_DATA);
+            }
         }
     }
     if (defined('BES_IMG') && BES_IMG && !file_exists(BES_IMG)) {
         if (function_exists('bes_ensure_writable_directory')) {
-            @bes_ensure_writable_directory(BES_IMG, 0755);
+            bes_ensure_writable_directory(BES_IMG, 0755);
         } else {
-            @wp_mkdir_p(BES_IMG);
-            @chmod(BES_IMG, 0755);
+            wp_mkdir_p(BES_IMG);
+            if (!chmod(BES_IMG, 0755)) {
+                error_log('BSEasy Sync: chmod fehlgeschlagen für ' . BES_IMG);
+            }
         }
     }
 }

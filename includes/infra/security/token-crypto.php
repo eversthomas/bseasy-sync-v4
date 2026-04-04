@@ -28,13 +28,16 @@ function bes_encrypt_token(string $token): string
 
     // Prüfe ob OpenSSL verfügbar ist
     if (!function_exists('openssl_encrypt') || !function_exists('openssl_random_pseudo_bytes') || !function_exists('openssl_cipher_iv_length')) {
-        // Fallback: Einfache Base64-Kodierung wenn OpenSSL nicht verfügbar
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Token wird unverschlüsselt gespeichert – OpenSSL nicht verfügbar.', 'WARN', 'security');
+        }
         return base64_encode($token);
     }
 
-    // Verwende WordPress Salt für Verschlüsselung
     if (!function_exists('wp_salt')) {
-        // Fallback: Einfache Base64-Kodierung wenn wp_salt nicht verfügbar
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Token wird unverschlüsselt gespeichert – wp_salt() nicht verfügbar.', 'WARN', 'security');
+        }
         return base64_encode($token);
     }
 
@@ -42,21 +45,27 @@ function bes_encrypt_token(string $token): string
     $iv_length = openssl_cipher_iv_length('AES-256-CBC');
 
     if ($iv_length === false) {
-        // Fallback: Einfache Base64-Kodierung wenn IV-Länge nicht ermittelt werden kann
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Token wird unverschlüsselt gespeichert – AES-IV-Länge nicht ermittelbar.', 'WARN', 'security');
+        }
         return base64_encode($token);
     }
 
     $iv = openssl_random_pseudo_bytes($iv_length);
 
     if ($iv === false) {
-        // Fallback: Einfache Base64-Kodierung wenn IV nicht generiert werden kann
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Token wird unverschlüsselt gespeichert – IV-Generierung fehlgeschlagen.', 'WARN', 'security');
+        }
         return base64_encode($token);
     }
 
     $encrypted = openssl_encrypt($token, 'AES-256-CBC', $key, 0, $iv);
 
     if ($encrypted === false) {
-        // Fallback: Einfache Base64-Kodierung bei Fehler
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Token wird unverschlüsselt gespeichert – openssl_encrypt fehlgeschlagen.', 'WARN', 'security');
+        }
         return base64_encode($token);
     }
 
