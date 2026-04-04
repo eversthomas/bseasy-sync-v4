@@ -239,23 +239,22 @@ window.addEventListener("load", function () {
           applyFilters();
           return;
         }
-        // Mindestlänge: PLZ braucht >= 4 Ziffern, Stadtname >= 3 Zeichen
-        const isNumeric = /^\d+$/.test(q);
-        const minLen = isNumeric ? 4 : 3;
-        if (q.length < minLen) {
-          // Eingabe zu kurz für Geocoding → kein Radius, reines String-Matching
-          radiusAllowedIds = null;
-          applyFilters();
-          return;
-        }
+        // Sichtbare Karten-IDs für Centroid-Fallback sammeln
+        // (wenn Geocoding scheitert, z.B. partielle PLZ → PHP nutzt Schwerpunkt der sichtbaren Mitglieder)
+        const visibleIds = [];
+        $cards.filter(":visible").each(function () {
+          const id = String($(this).data("member-id") || "").trim();
+          if (id) visibleIds.push(id);
+        });
         $.ajax({
           url: bes_ajax.ajax_url,
           type: "POST",
           data: {
             action: "bes_radius_search",
             nonce: bes_ajax.nonce,
-            location: locationVal.trim(),
+            location: q,
             radius_km: radiusKm,
+            center_member_ids: visibleIds,
           },
           success: function (resp) {
             if (resp.success && Array.isArray(resp.data.member_ids)) {
@@ -281,13 +280,11 @@ window.addEventListener("load", function () {
         });
         if (!$wrapper.length) return;
         const v = ($input.val() || "").trim();
-        const isNum = /^\d+$/.test(v);
-        const minLen = isNum ? 4 : 3;
-        if (v.length >= minLen) {
+        if (v.length > 0) {
           $wrapper.show();
         } else {
           $wrapper.hide();
-          // Radius zurücksetzen wenn Feld geleert oder zu kurz
+          // Radius zurücksetzen wenn Feld geleert
           const $rs = $wrapper.find(".bes-radius-select");
           $rs.val("25");
           radiusAllowedIds = null;

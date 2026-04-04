@@ -60,7 +60,7 @@ function bes_geocode_location_query(string $query): ?array
         'q'            => $query,
         'format'       => 'json',
         'limit'        => 1,
-        'countrycodes' => 'de',
+        'countrycodes' => 'de,at,ch',
         'addressdetails' => 0,
     ], 'https://nominatim.openstreetmap.org/search');
 
@@ -126,25 +126,48 @@ function bes_handle_radius_search(): void
     $location  = sanitize_text_field(wp_unslash($_REQUEST['location']  ?? ''));
     $radius_km = max(1, min(200, intval($_REQUEST['radius_km'] ?? 25)));
 
-    if (empty($location)) {
+    // Sichtbare Member-IDs für Centroid-Fallback (optional)
+    $visible_ids_raw = array_filter(
+        array_map('strval', (array) ($_REQUEST['center_member_ids'] ?? [])),
+        fn($v) => ctype_digit($v) && $v !== ''
+    );
+
+    if (empty($location) && empty($visible_ids_raw)) {
         wp_send_json_error(['error' => __('Kein Ort angegeben.', BES_TEXT_DOMAIN)]);
         return;
     }
 
-    // Geocode
-    $center = bes_geocode_location_query($location);
+    // Mitglieder vorab laden (wird für Geocoding-Fallback und Distanzberechnung benötigt)
+    if (!function_exists('bes_members_get_all')) {
+        wp_send_json_error(['error' => __('Repository nicht verfügbar.', BES_TEXT_DOMAIN)]);
+        return;
+    }
+    $members = bes_members_get_all();
+
+    // Suchzentrum bestimmen: kurze PLZ-Präfixe (< 5 Ziffern) liefern über Nominatim
+    // unzuverlässige Ergebnisse → direkt Centroid der sichtbaren Mitglieder nutzen.
+    // Vollständige PLZ (5 DE / 4 AT/CH) und Stadtnamen → Nominatim, Centroid als Fallback.
+    $is_short_numeric = !empty($location) && preg_match('/^\d{1,4}$/', $location);
+
+    $center = null;
+    if ($is_short_numeric && !empty($visible_ids_raw)) {
+        // Partielle PLZ → Schwerpunkt der bereits sichtbaren Mitglieder
+        $center = bes_compute_members_centroid($visible_ids_raw, $members);
+    }
+    if (!$center && !empty($location)) {
+        // Vollständige PLZ / Stadtname → Nominatim (inkl. AT + CH)
+        $center = bes_geocode_location_query($location);
+    }
+    if (!$center && !empty($visible_ids_raw)) {
+        // Letzter Fallback: Centroid (falls Nominatim scheitert)
+        $center = bes_compute_members_centroid($visible_ids_raw, $members);
+    }
     if (!$center) {
         wp_send_json_error(['error' => __('Ort konnte nicht gefunden werden.', BES_TEXT_DOMAIN)]);
         return;
     }
 
-    // Mitglieder laden und nach Distanz filtern
-    if (!function_exists('bes_members_get_all')) {
-        wp_send_json_error(['error' => __('Repository nicht verfügbar.', BES_TEXT_DOMAIN)]);
-        return;
-    }
-
-    $members     = bes_members_get_all();
+    // Distanzfilterung
     $matching_ids = [];
 
     foreach ($members as $member) {
@@ -177,4 +200,43 @@ function bes_handle_radius_search(): void
     }
 
     wp_send_json_success(['member_ids' => $matching_ids]);
+}
+
+/**
+ * Berechnet den geografischen Schwerpunkt (Centroid) einer Mitglieder-Liste.
+ *
+ * @param string[] $ids      Member-IDs als Strings
+ * @param array    $members  Alle Mitglieder (aus Repository)
+ * @return array|null        ['lat' => float, 'lng' => float] oder null
+ */
+function bes_compute_members_centroid(array $ids, array $members): ?array
+{
+    $lats = [];
+    $lngs = [];
+
+    foreach ($members as $member) {
+        $id = strval($member['member.id'] ?? $member['member']['id'] ?? $member['id'] ?? '');
+        if (!in_array($id, $ids, true)) {
+            continue;
+        }
+        $lat = (float) ($member['contact.geoPositionCoords.lat']
+            ?? $member['contact']['geoPositionCoords']['lat']
+            ?? 0);
+        $lng = (float) ($member['contact.geoPositionCoords.lng']
+            ?? $member['contact']['geoPositionCoords']['lng']
+            ?? 0);
+        if ($lat !== 0.0 || $lng !== 0.0) {
+            $lats[] = $lat;
+            $lngs[] = $lng;
+        }
+    }
+
+    if (empty($lats)) {
+        return null;
+    }
+
+    return [
+        'lat' => array_sum($lats) / count($lats),
+        'lng' => array_sum($lngs) / count($lngs),
+    ];
 }
