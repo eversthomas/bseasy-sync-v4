@@ -38,9 +38,12 @@ Zentrale Ladereihenfolge aller Module. Einzige Datei, die direkt aus `bseasy-syn
 | `bes_bootstrap_register_admin_error_handlers()` | Registriert Error- und Shutdown-Handler im Admin-Kontext |
 
 ### `bootstrap/admin-page.php`
+Implementiert das PRG-Pattern (Post/Redirect/Get): POST-Verarbeitung via `admin_init`-Hook, Ergebnisse werden per `set_transient` über den Redirect hinaus weitergegeben.
+
 | Funktion | Beschreibung |
 |----------|-------------|
-| `bes_admin_page()` | Rendert die Admin-Hauptseite; verarbeitet POST-Formulare (Token, Consent-Feld, Batch-Größe) |
+| `bes_admin_handle_post(): void` | Verarbeitet POST-Formulare (Token, Consent-Feld, Batch-Größe), schreibt Ergebnis per `add_settings_error()` + Transient, leitet dann per `wp_safe_redirect()` weiter |
+| `bes_admin_page(): void` | Rendert die Admin-Hauptseite; restauriert Settings-Errors aus Transient nach PRG-Redirect |
 
 ### `bootstrap/admin-menu.php`
 | Funktion | Beschreibung |
@@ -78,7 +81,7 @@ Definiert alle globalen Konstanten: `BES_VERSION`, `BES_DIR`, `BES_URL`, `BES_DA
 ### `includes/constants-v3.php`
 Definiert V3-Konstanten:
 - Verzeichnisse: `BES_DATA_V3`, `BES_DATA_V3_URL`
-- Dateinamen: `BES_V3_MEMBERS_FILE`, `BES_V3_STATUS_FILE`, `BES_V3_FIELD_CATALOG`, `BES_V3_SELECTION`, `BES_V3_HISTORY_FILE`, `BES_V3_LOG_FILE`, `BES_V3_DEBUG_LOG_FILE`
+- Dateinamen: `BES_V3_MEMBERS_FILE`, `BES_V3_MEMBERS_PART_PREFIX`, `BES_V3_STATUS_FILE`, `BES_V3_FIELD_CATALOG`, `BES_V3_SELECTION`, `BES_V3_HISTORY_FILE`, `BES_V3_LOG_FILE`, `BES_V3_DEBUG_LOG_FILE`
 - Einstellungen: `BES_V3_BATCH_SIZE_DEFAULT/MIN/MAX`, `BES_V3_EXPLORER_SAMPLE_DEFAULT/MIN/MAX`
 - Hooks: `BES_V3_CRON_HOOK`, `BES_V3_EXPLORER_CRON_HOOK`
 - Optionen: `BES_V3_OPTION_PREFIX`, `BES_V3_REQUIRED_FIELDS`, `BES_V3_PII_PATTERNS`
@@ -435,6 +438,26 @@ Delegiert an `includes/design/design-settings.php`. Nur für Abwärtskompatibili
 
 ### `admin/calendar-handler.php`
 Verarbeitet Kalender-Konfigurationen. *(Hook: `admin_post_bes_save_calendars`)*
+
+### `admin/views/ui-sync.php` — Sync-Tab Layout
+Dünnes Layout-Skelett; enthält die gemeinsamen JavaScript-Handler für Explorer, Feldauswahl und Sync.
+Bindet via `require_once` alle vier Partials ein (s.u.).
+
+### `admin/views/partials/sync-data-loader.php`
+PHP-Datenvorbereitung für den Sync-Tab (kein HTML). Stellt alle PHP-Variablen bereit, die von den HTML-Partials benötigt werden:
+`$cache_stats`, `$explorer_last_run`, `$explorer_field_count`, `$explorer_running`, `$catalog_file`, `$catalog_exists`, `$last_sync_time_v3`, `$members_with_consent_v3`, `$explorer_status`
+
+### `admin/views/partials/sync-tab-cache-card.php`
+HTML: Cache-Status-Karte (bereits vorhanden).
+
+### `admin/views/partials/sync-onboarding-hint.php`
+HTML: Onboarding-Hinweis (bereits vorhanden).
+
+### `admin/views/partials/sync-tab-explorer.php`
+HTML: V3 Explorer + Feldauswahl-Karte (`.bes-sync-grid`).
+
+### `admin/views/partials/sync-tab-sync.php`
+HTML: V3 Sync-Karte (Start, Stop, Reset, Merge, Consent Audit).
 
 ---
 

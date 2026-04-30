@@ -161,7 +161,7 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
         // Stelle sicher, dass das Verzeichnis existiert
         if (file_exists(BES_DATA_V3)) {
             // Finde alle Part-Dateien dynamisch (unabhängig von Batch-Größe)
-            $part_files = glob(BES_DATA_V3 . 'members_consent_v3_part*.json');
+            $part_files = glob(BES_DATA_V3 . BES_V3_MEMBERS_PART_PREFIX . '*.json');
             $deleted_count = 0;
             if ($part_files && is_array($part_files)) {
                 foreach ($part_files as $part_file) {

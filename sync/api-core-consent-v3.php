@@ -203,7 +203,7 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         // Speichere unvollständige Daten falls cancelled oder timeout
         if (($was_cancelled || $was_timeout) && !empty($filtered)) {
             $partNum = (int)floor($offset / max($limit, 1)) + 1;
-            $file = BES_DATA_V3 . "members_consent_v3_part{$partNum}.json";
+            $file = BES_DATA_V3 . BES_V3_MEMBERS_PART_PREFIX . $partNum . '.json';
             $payload = [
                 '_meta' => array_merge($meta, [
                     'finished' => date('c'),
@@ -254,7 +254,7 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         // ============================================================
         
         $partNum = (int)floor($offset / max($limit, 1)) + 1;
-        $file = BES_DATA_V3 . "members_consent_v3_part{$partNum}.json";
+        $file = BES_DATA_V3 . BES_V3_MEMBERS_PART_PREFIX . $partNum . '.json';
         
         $payload = [
             '_meta' => array_merge($meta, [
@@ -967,7 +967,7 @@ function bseasy_v3_merge_parts(): array {
         
         // Finde alle Part-Dateien dynamisch (unabhängig von Batch-Größe)
         // Statt fester Schleife bis 50 verwenden wir glob() um alle Parts zu finden
-        $part_files = glob(BES_DATA_V3 . 'members_consent_v3_part*.json');
+        $part_files = glob(BES_DATA_V3 . BES_V3_MEMBERS_PART_PREFIX . '*.json');
         
         if (empty($part_files) || !is_array($part_files)) {
             bseasy_v3_release_lock($merge_lock_key);
