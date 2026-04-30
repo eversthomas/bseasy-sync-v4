@@ -52,12 +52,16 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         // Token prüfen
         $encrypted_token = get_option('bes_api_token', '');
         if (empty($encrypted_token)) {
-            return ['success' => false, 'error' => 'Kein API-Token konfiguriert'];
+            return ['success' => false, 'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                ? bes_append_easyverein_token_renewal_hint('Kein API-Token konfiguriert')
+                : 'Kein API-Token konfiguriert'];
         }
         
         $token = function_exists('bes_decrypt_token') ? bes_decrypt_token($encrypted_token) : $encrypted_token;
         if (empty($token)) {
-            return ['success' => false, 'error' => 'Token konnte nicht entschlüsselt werden'];
+            return ['success' => false, 'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                ? bes_append_easyverein_token_renewal_hint('Token konnte nicht entschlüsselt werden')
+                : 'Token konnte nicht entschlüsselt werden'];
         }
         
         // Prüfe Consent-Feld-ID (für V3 Sync erforderlich, außer wenn "Alle Mitglieder" aktiviert)
@@ -327,7 +331,9 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         return [
             'success' => false,
             'ok' => false,
-            'error' => $error_msg,
+            'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                ? bes_append_easyverein_token_renewal_hint($error_msg)
+                : $error_msg,
             'meta' => $meta ?? [],
             'stats' => $stats ?? [],
         ];

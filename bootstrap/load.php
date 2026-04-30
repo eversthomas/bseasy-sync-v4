@@ -82,6 +82,11 @@ if (file_exists(BES_DIR . 'includes/design/design-settings.php')) {
     require_once BES_DIR . 'includes/design/design-settings.php';
 }
 
+// Admin-Hinweise bei API-/Token-Fehlern (EasyVerein)
+if (file_exists(BES_DIR . 'includes/api-error-user-hints.php')) {
+    require_once BES_DIR . 'includes/api-error-user-hints.php';
+}
+
 /**
  * ------------------------------------------------------------
  *  🔩 SYNC-MODUL & ADMIN-AJAX (nur in Admin-Kontext oder WP-Cron)

@@ -89,7 +89,7 @@ if (!defined('BES_V3_EXPLORER_SAMPLE_MAX')) {
 }
 
 if (!defined('BES_V3_EXPLORER_SAMPLE_DEFAULT')) {
-    define('BES_V3_EXPLORER_SAMPLE_DEFAULT', 100);
+    define('BES_V3_EXPLORER_SAMPLE_DEFAULT', 1);
 }
 
 // ============================================================

@@ -197,7 +197,10 @@ function bseasy_v3_audit_consent(string &$token, ?string &$baseUsed = null): arr
     } catch (Exception $e) {
         $audit['errors'][] = "Exception: " . $e->getMessage();
         $audit['finished_at'] = date('c');
-        bseasy_v3_update_status(0, 100, "AUDIT: Fehler - " . $e->getMessage(), 'error');
+        $display_err = function_exists('bes_append_easyverein_token_renewal_hint')
+            ? bes_append_easyverein_token_renewal_hint($e->getMessage())
+            : $e->getMessage();
+        bseasy_v3_update_status(0, 100, "AUDIT: Fehler - " . $display_err, 'error');
         return $audit;
     }
 }

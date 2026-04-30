@@ -48,9 +48,9 @@ if (!defined('ABSPATH')) exit;
             <label>
                 <strong>Sample-Größe:</strong>
                 <select id="bes-v3-explorer-sample-size" style="margin-left: 10px;">
-                    <option value="1">1 (Referenz)</option>
+                    <option value="1" selected>1 (Referenz)</option>
                     <option value="50">50</option>
-                    <option value="100" selected>100</option>
+                    <option value="100">100</option>
                     <option value="200">200</option>
                 </select>
             </label>

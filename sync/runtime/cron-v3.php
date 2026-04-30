@@ -21,17 +21,8 @@ if (!defined('BES_DATA')) {
     }
 }
 
-// Lade V3-Helpers
-require_once BES_DIR . 'sync/v3-helpers.php';
-
-// Lade V3 Sync
-require_once BES_DIR . 'sync/api-core-consent-v3.php';
-
-// Lade Explorer
-require_once BES_DIR . 'sync/api-explorer-v3.php';
-
-// Lade Audit-Funktionen
-require_once BES_DIR . 'sync/v3-consent-audit.php';
+// Gesamtes Sync-Modul über die öffentliche Fassade (gleiche Abhängigkeiten wie bootstrap/load.php)
+require_once BES_DIR . 'sync/sync-service.php';
 
 /**
  * V3 Explorer (für WP-Cron)
@@ -39,7 +30,11 @@ require_once BES_DIR . 'sync/v3-consent-audit.php';
  * @param int $sample_size Sample-Größe
  * @param bool $fresh_from_api Ob frische Daten von API geholt werden sollen
  */
-add_action('bes_run_explorer_v3', function ($sample_size = 100, $fresh_from_api = true) {
+add_action('bes_run_explorer_v3', function ($sample_size = null, $fresh_from_api = true) {
+    if ($sample_size === null || $sample_size === '') {
+        $sample_size = defined('BES_V3_EXPLORER_SAMPLE_DEFAULT') ? BES_V3_EXPLORER_SAMPLE_DEFAULT : 1;
+    }
+    $sample_size = (int) $sample_size;
     try {
         // Timeout-Setting
         if (function_exists('bes_safe_set_time_limit')) {
@@ -70,8 +65,11 @@ add_action('bes_run_explorer_v3', function ($sample_size = 100, $fresh_from_api 
         
     } catch (Throwable $e) {
         delete_option(BES_V3_OPTION_PREFIX . 'explorer_running');
-        $error_msg = $e->getMessage();
-        bseasy_v3_update_status(0, 100, "Kritischer Fehler: $error_msg", 'error');
+        $error_msg   = $e->getMessage();
+        $display_err = function_exists('bes_append_easyverein_token_renewal_hint')
+            ? bes_append_easyverein_token_renewal_hint($error_msg)
+            : $error_msg;
+        bseasy_v3_update_status(0, 100, "Kritischer Fehler: $display_err", 'error');
         bseasy_v3_log(
             "V3 Explorer Fehler: $error_msg in " . $e->getFile() . ":" . $e->getLine(),
             'ERROR'
@@ -268,8 +266,11 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
         }
         
     } catch (Throwable $e) {
-        $error_msg = $e->getMessage();
-        bseasy_v3_update_status(0, 0, "Kritischer Fehler: $error_msg", 'error');
+        $error_msg   = $e->getMessage();
+        $display_err = function_exists('bes_append_easyverein_token_renewal_hint')
+            ? bes_append_easyverein_token_renewal_hint($error_msg)
+            : $error_msg;
+        bseasy_v3_update_status(0, 0, "Kritischer Fehler: $display_err", 'error');
         
         bseasy_v3_log(
             "V3 Cron Sync Fehler: $error_msg in " . $e->getFile() . ":" . $e->getLine(),
@@ -341,14 +342,20 @@ add_action('bes_run_audit_consent_v3', function () {
             bseasy_v3_log("AUDIT: Consent-Audit erfolgreich abgeschlossen - Ergebnis gespeichert in $audit_file", 'INFO');
         } else {
             $error_msg = !empty($audit_result['errors']) ? implode(', ', $audit_result['errors']) : 'Unbekannter Fehler';
-            bseasy_v3_update_status(0, 100, "Fehler: $error_msg", 'error');
+            $display_err = function_exists('bes_append_easyverein_token_renewal_hint')
+                ? bes_append_easyverein_token_renewal_hint($error_msg)
+                : $error_msg;
+            bseasy_v3_update_status(0, 100, "Fehler: $display_err", 'error');
             bseasy_v3_log("AUDIT: Consent-Audit fehlgeschlagen: $error_msg", 'ERROR');
         }
         
     } catch (Throwable $e) {
         delete_option(BES_V3_OPTION_PREFIX . 'audit_running');
-        $error_msg = $e->getMessage();
-        bseasy_v3_update_status(0, 100, "Kritischer Fehler: $error_msg", 'error');
+        $error_msg   = $e->getMessage();
+        $display_err = function_exists('bes_append_easyverein_token_renewal_hint')
+            ? bes_append_easyverein_token_renewal_hint($error_msg)
+            : $error_msg;
+        bseasy_v3_update_status(0, 100, "Kritischer Fehler: $display_err", 'error');
         bseasy_v3_log(
             "V3 Audit Fehler: $error_msg in " . $e->getFile() . ":" . $e->getLine(),
             'ERROR'

@@ -27,17 +27,10 @@ if (!defined('BES_V3_OPTION_PREFIX')) {
     }
 }
 
-// Lade V3-Helpers für bseasy_v3_read_json
+// Sync-Modul nur über die öffentliche Fassade laden (bseasy_v3_read_json etc.)
 if (!function_exists('bseasy_v3_read_json')) {
-    if (file_exists(BES_DIR . 'sync/v3-helpers.php')) {
-        require_once BES_DIR . 'sync/v3-helpers.php';
-    }
-}
-
-// Lade V3-Core für bseasy_v3_load_selection
-if (!function_exists('bseasy_v3_load_selection')) {
-    if (file_exists(BES_DIR . 'sync/api-core-consent-v3.php')) {
-        require_once BES_DIR . 'sync/api-core-consent-v3.php';
+    if (defined('BES_DIR') && file_exists(BES_DIR . 'sync/sync-service.php')) {
+        require_once BES_DIR . 'sync/sync-service.php';
     }
 }
 

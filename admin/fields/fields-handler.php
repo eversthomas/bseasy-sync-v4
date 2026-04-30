@@ -225,10 +225,10 @@ function bes_extract_all_fields() {
         $v3_file = BES_DATA_V3 . BES_V3_MEMBERS_FILE;
         
         if (file_exists($v3_file) && filesize($v3_file) > 0) {
-            // Lade V3-Helpers falls nötig
+            // Sync-Modul nur über die öffentliche Fassade laden
             if (!function_exists('bseasy_v3_read_json')) {
-                if (file_exists(BES_DIR . 'sync/v3-helpers.php')) {
-                    require_once BES_DIR . 'sync/v3-helpers.php';
+                if (file_exists(BES_DIR . 'sync/sync-service.php')) {
+                    require_once BES_DIR . 'sync/sync-service.php';
                 }
             }
             

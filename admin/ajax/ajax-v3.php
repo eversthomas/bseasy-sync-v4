@@ -395,7 +395,11 @@ add_action('wp_ajax_bes_v3_merge_parts', function () {
             'count' => $result['members_count']
         ]);
     } else {
-        wp_send_json_error(['error' => esc_html($result['error'] ?? __('Unbekannter Fehler', BES_TEXT_DOMAIN))]);
+        $err        = (string) ($result['error'] ?? __('Unbekannter Fehler', BES_TEXT_DOMAIN));
+        $err_public = function_exists('bes_append_easyverein_token_renewal_hint')
+            ? bes_append_easyverein_token_renewal_hint($err)
+            : $err;
+        wp_send_json_error(['error' => esc_html($err_public)]);
     }
 });
 

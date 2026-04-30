@@ -55,11 +55,11 @@ function bseasy_v3_explorer_is_cancelled(): bool {
 /**
  * Führt API Explorer aus und erstellt Feldkatalog
  * 
- * @param int $sample_size Anzahl der Mitglieder für Statistik (50-200)
+ * @param int $sample_size Anzahl der Mitglieder für Statistik (1–200)
  * @param bool $fresh_from_api Ob frische Daten von API geholt werden sollen
  * @return array Ergebnis mit success, message, catalog_path, stats
  */
-function bseasy_v3_run_explorer(int $sample_size = 100, bool $fresh_from_api = true): array {
+function bseasy_v3_run_explorer(int $sample_size = BES_V3_EXPLORER_SAMPLE_DEFAULT, bool $fresh_from_api = true): array {
     try {
         // Validierung
         if ($sample_size < BES_V3_EXPLORER_SAMPLE_MIN || $sample_size > BES_V3_EXPLORER_SAMPLE_MAX) {
@@ -74,7 +74,9 @@ function bseasy_v3_run_explorer(int $sample_size = 100, bool $fresh_from_api = t
         if (empty($encrypted_token)) {
             return [
                 'success' => false,
-                'error' => 'Kein API-Token konfiguriert'
+                'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                    ? bes_append_easyverein_token_renewal_hint('Kein API-Token konfiguriert')
+                    : 'Kein API-Token konfiguriert',
             ];
         }
         
@@ -82,7 +84,9 @@ function bseasy_v3_run_explorer(int $sample_size = 100, bool $fresh_from_api = t
         if (empty($token)) {
             return [
                 'success' => false,
-                'error' => 'Token konnte nicht entschlüsselt werden'
+                'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                    ? bes_append_easyverein_token_renewal_hint('Token konnte nicht entschlüsselt werden')
+                    : 'Token konnte nicht entschlüsselt werden',
             ];
         }
         
@@ -146,7 +150,9 @@ function bseasy_v3_run_explorer(int $sample_size = 100, bool $fresh_from_api = t
         if (empty($sample_members)) {
             return [
                 'success' => false,
-                'error' => 'Konnte keine Mitglieder-Daten abrufen'
+                'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                    ? bes_append_easyverein_token_renewal_hint('Konnte keine Mitglieder-Daten abrufen')
+                    : 'Konnte keine Mitglieder-Daten abrufen',
             ];
         }
         
@@ -258,7 +264,9 @@ function bseasy_v3_run_explorer(int $sample_size = 100, bool $fresh_from_api = t
         
         return [
             'success' => false,
-            'error' => $error_msg
+            'error' => function_exists('bes_append_easyverein_token_renewal_hint')
+                ? bes_append_easyverein_token_renewal_hint($error_msg)
+                : $error_msg,
         ];
     }
 }
@@ -369,7 +377,7 @@ function bseasy_v3_flatten_keys_with_values($data, string $prefix = '', int $max
  * @param int $sample_size Anzahl
  * @return array Array von Member-Daten
  */
-function bseasy_v3_fetch_sample_members(string &$token, ?string &$baseUsed = null, int $sample_size = 100): array {
+function bseasy_v3_fetch_sample_members(string &$token, ?string &$baseUsed = null, int $sample_size = BES_V3_EXPLORER_SAMPLE_DEFAULT): array {
     $members = [];
     
     // Nutze generische API-Funktionen
