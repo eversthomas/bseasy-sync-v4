@@ -37,45 +37,12 @@ function bes_render_members(): string
   $img_dir      = BES_DATA . 'img/';
 
   // ============================================================
-  // CACHE CHECK
+  // RENDER-TRANSIENT DEAKTIVIERT (kein get_transient / bes_get_cached)
   // ============================================================
-  // Cache-Key inkludiert auch PHP-Datei-Versionen für Code-Änderungen und JSON-Quelle
-  $renderer_file = __FILE__;
-  $filter_helpers_file = dirname(__DIR__) . '/includes/filter-helpers.php';
-  
-  // Design-Settings für Cache-Key (Cache invalidiert bei Design-Änderungen)
-  $design_settings_hash = '';
-  if (function_exists('bes_frontend_get_design_settings')) {
-    $design_settings = bes_frontend_get_design_settings();
-    $design_settings_hash = md5(json_encode($design_settings));
-  }
-  
-  $cache_key = 'bes_members_render_' . md5(
-    bes_members_get_file_path() .
-    bes_members_get_file_mtime() .
-    $config_file .
-    (file_exists($config_file) ? filemtime($config_file) : 0) .
-    $renderer_file .
-    (file_exists($renderer_file) ? filemtime($renderer_file) : 0) .
-    $filter_helpers_file .
-    (file_exists($filter_helpers_file) ? filemtime($filter_helpers_file) : 0) .
-    (defined('BES_VERSION') ? BES_VERSION : '1.0') . // Plugin-Version
-    $design_settings_hash // Design-Settings für Cache-Invalidierung
-  );
-  
-  // Verwende hosting-kompatible Cache-Funktion
-  if (function_exists('bes_get_cached')) {
-    $cached = bes_get_cached($cache_key);
-  } else {
-    $cached = get_transient($cache_key);
-  }
-  
-  if ($cached !== false) {
-    bes_debug_log('Renderer-Cache Hit', 'DEBUG', 'bes_render_members');
-    return $cached;
-  }
-  
-  bes_debug_log('Renderer-Cache Miss - generiere neues HTML', 'DEBUG', 'bes_render_members');
+  // Pro Seitenaufruf soll u. a. shuffle($members) greifen; ein HTML-Transient würde die
+  // Reihenfolge bis zur Cache-Laufzeit festhalten. ~155 Mitglieder sind ohne diesen Cache unkritisch.
+
+  bes_debug_log('Renderer: generiere HTML (Render-Transient aus)', 'DEBUG', 'bes_render_members');
 
   // ============================================================
   // VALIDIERUNG
@@ -150,6 +117,11 @@ function bes_render_members(): string
   // Filter: Erlaube Entwicklern, Mitglieder-Daten zu modifizieren
   if (function_exists('bes_filter_members_data')) {
       $members = bes_filter_members_data($members);
+  }
+
+  // Zufällige Kartenreihenfolge pro Seitenaufruf (serverseitig; DOM bleibt für applyFilters stabil)
+  if (!empty($members)) {
+    shuffle($members);
   }
 
   // ----------------------------------------------------------
@@ -630,21 +602,13 @@ function bes_render_members(): string
   // ----------------------------------------------------------
   // 🔚 Rückgabe: Komplettes HTML (Filterbar + Grid)
   // ----------------------------------------------------------
-  // ============================================================
-  // CACHE SPEICHERN
-  // ============================================================
-  // Verwende hosting-kompatible Cache-Funktion
-  if (function_exists('bes_set_cached')) {
-    bes_set_cached($cache_key, $complete_html);
-  } else {
-    set_transient($cache_key, $complete_html, BES_CACHE_DURATION);
-  }
+  // Render-Transient bewusst nicht gespeichert (kein set_transient / bes_set_cached), siehe Funktionskopf.
   bes_debug_log(
-    sprintf('HTML generiert und gecacht (Länge: %d Zeichen)', strlen($complete_html)), 
-    'DEBUG', 
+    sprintf('HTML generiert (Länge: %d Zeichen)', strlen($complete_html)),
+    'DEBUG',
     'bes_render_members'
   );
-  
+
   // Rückgabe als ist (nicht escaped)
   return $complete_html;
 }
