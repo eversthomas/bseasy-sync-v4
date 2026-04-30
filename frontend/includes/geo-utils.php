@@ -97,11 +97,88 @@ function bes_geocode_location_query(string $query): ?array
 }
 
 /**
+ * Sammelt alle PLZ-artigen Werte eines Mitglieds (flach + contact-Objekt).
+ *
+ * @param array $member
+ * @return string[]
+ */
+function bes_member_collect_zip_values(array $member): array
+{
+    $out = [];
+    // Root: teils flach aus älteren Exporten (z. B. contact.companyZip auf oberster Ebene)
+    $flat_keys = ['contact.companyZip', 'contact.zip'];
+    foreach ($flat_keys as $k) {
+        if (isset($member[$k]) && $member[$k] !== '' && (is_string($member[$k]) || is_numeric($member[$k]))) {
+            $out[] = (string) $member[$k];
+        }
+    }
+    // V3-Consent / EasyVerein: verschachteltes contact-Objekt nutzt dieselben Feld-IDs als Keys
+    // (z. B. "contact.companyZip" — nicht nur "companyZip").
+    if (!empty($member['contact']) && is_array($member['contact'])) {
+        $nested_keys = ['contact.companyZip', 'contact.zip', 'companyZip', 'zip', 'postalCode'];
+        foreach ($nested_keys as $sub) {
+            if (!array_key_exists($sub, $member['contact'])) {
+                continue;
+            }
+            $v = $member['contact'][$sub];
+            if ($v === '' || (!is_string($v) && !is_numeric($v))) {
+                continue;
+            }
+            $out[] = (string) $v;
+        }
+    }
+
+    return array_values(array_filter(array_map('trim', $out)));
+}
+
+/**
+ * Prüft, ob eine Mitglieds-PLZ mit dem Suchpräfix beginnt (wie Frontend: startsWith, kleingeschrieben).
+ */
+function bes_member_zip_matches_prefix(array $member, string $prefix): bool
+{
+    $prefix = strtolower(trim($prefix));
+    if ($prefix === '') {
+        return true;
+    }
+    foreach (bes_member_collect_zip_values($member) as $z) {
+        $z = strtolower((string) $z);
+        if ($z !== '' && strncmp($z, $prefix, strlen($prefix)) === 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Alle Member-IDs, deren PLZ zum Präfix passt (für Schwerpunkt bei partieller PLZ).
+ *
+ * @param array  $members
+ * @param string $prefix
+ * @return string[]
+ */
+function bes_member_ids_with_zip_prefix(array $members, string $prefix): array
+{
+    $ids = [];
+    foreach ($members as $member) {
+        if (!bes_member_zip_matches_prefix($member, $prefix)) {
+            continue;
+        }
+        $id = $member['member.id'] ?? $member['member']['id'] ?? $member['id'] ?? null;
+        if ($id !== null) {
+            $ids[] = (string) $id;
+        }
+    }
+
+    return $ids;
+}
+
+/**
  * AJAX: Mitglieder-IDs zurückgeben, die innerhalb eines Radius liegen.
  *
  * Eingabe (POST/GET):
  *  - location  (string)  PLZ oder Stadtname
- *  - radius_km (int)     Suchradius in km (1–200, Standard: 25)
+ *  - radius_km (int) Suchradius in km (1–200, Standard: 10)
  *  - nonce     (string)  bes_filter_members_nonce
  *
  * Antwort: { member_ids: ["123", "456", ...] }
@@ -124,7 +201,7 @@ function bes_handle_radius_search(): void
     }
 
     $location  = sanitize_text_field(wp_unslash($_REQUEST['location']  ?? ''));
-    $radius_km = max(1, min(200, intval($_REQUEST['radius_km'] ?? 25)));
+    $radius_km = max(1, min(200, intval($_REQUEST['radius_km'] ?? 10)));
 
     // Sichtbare Member-IDs für Centroid-Fallback (optional)
     $visible_ids_raw = array_filter(
@@ -144,25 +221,59 @@ function bes_handle_radius_search(): void
     }
     $members = bes_members_get_all();
 
-    // Suchzentrum bestimmen: kurze PLZ-Präfixe (< 5 Ziffern) liefern über Nominatim
-    // unzuverlässige Ergebnisse → direkt Centroid der sichtbaren Mitglieder nutzen.
-    // Vollständige PLZ (5 DE / 4 AT/CH) und Stadtnamen → Nominatim, Centroid als Fallback.
+    // Suchzentrum:
+    // - Kurze PLZ (1–4 Ziffern): Schwerpunkt aller Mitglieder mit passendem PLZ-Präfix (stabil beim
+    //   Radiuswechsel), sonst sichtbare Karten, sonst Nominatim.
+    // - Vollständige PLZ / Freitext: zuerst Nominatim, dann Centroid der sichtbaren Karten.
     $is_short_numeric = !empty($location) && preg_match('/^\d{1,4}$/', $location);
 
-    $center = null;
-    if ($is_short_numeric && !empty($visible_ids_raw)) {
-        // Partielle PLZ → Schwerpunkt der bereits sichtbaren Mitglieder
-        $center = bes_compute_members_centroid($visible_ids_raw, $members);
-    }
-    if (!$center && !empty($location)) {
-        // Vollständige PLZ / Stadtname → Nominatim (inkl. AT + CH)
-        $center = bes_geocode_location_query($location);
-    }
-    if (!$center && !empty($visible_ids_raw)) {
-        // Letzter Fallback: Centroid (falls Nominatim scheitert)
-        $center = bes_compute_members_centroid($visible_ids_raw, $members);
+    $center        = null;
+    $center_source = null;
+    if ($is_short_numeric) {
+        $prefix_ids = bes_member_ids_with_zip_prefix($members, $location);
+        $center     = bes_compute_members_centroid($prefix_ids, $members);
+        if ($center) {
+            $center_source = 'prefix_zip_centroid';
+        }
+        if (!$center && !empty($visible_ids_raw)) {
+            $center = bes_compute_members_centroid($visible_ids_raw, $members);
+            if ($center) {
+                $center_source = 'client_center_member_ids_centroid';
+            }
+        }
+        if (!$center && !empty($location)) {
+            $center = bes_geocode_location_query($location);
+            if ($center) {
+                $center_source = 'nominatim';
+            }
+        }
+    } else {
+        if (!empty($location)) {
+            $center = bes_geocode_location_query($location);
+            if ($center) {
+                $center_source = 'nominatim';
+            }
+        }
+        if (!$center && !empty($visible_ids_raw)) {
+            $center = bes_compute_members_centroid($visible_ids_raw, $members);
+            if ($center) {
+                $center_source = 'client_center_member_ids_centroid';
+            }
+        }
     }
     if (!$center) {
+        if (defined('BES_RADIUS_SEARCH_DEBUG') && BES_RADIUS_SEARCH_DEBUG) {
+            bes_radius_search_emit_debug_log(
+                $location,
+                $radius_km,
+                $visible_ids_raw,
+                $members,
+                null,
+                null,
+                $is_short_numeric,
+                0
+            );
+        }
         wp_send_json_error(['error' => __('Ort konnte nicht gefunden werden.', BES_TEXT_DOMAIN)]);
         return;
     }
@@ -199,7 +310,94 @@ function bes_handle_radius_search(): void
         }
     }
 
+    if (defined('BES_RADIUS_SEARCH_DEBUG') && BES_RADIUS_SEARCH_DEBUG) {
+        bes_radius_search_emit_debug_log(
+            $location,
+            $radius_km,
+            $visible_ids_raw,
+            $members,
+            $center,
+            $center_source,
+            $is_short_numeric,
+            count($matching_ids)
+        );
+    }
+
     wp_send_json_success(['member_ids' => $matching_ids]);
+}
+
+/**
+ * Temporäres Diagnose-Log für Radius-Anfragen (PHP error_log / WP_DEBUG.log).
+ *
+ * Aktivierung in wp-config.php:
+ * define('BES_RADIUS_SEARCH_DEBUG', true);
+ *
+ * @param string               $location
+ * @param int                  $radius_km
+ * @param string[]             $center_member_ids  Gefilterte Client-IDs (nur Ziffern)
+ * @param array                $members
+ * @param array|null           $center_used        ['lat'=>…,'lng'=>…] oder null
+ * @param string|null          $center_source      z. B. nominatim, client_center_member_ids_centroid
+ * @param bool                 $is_short_numeric
+ * @param int                  $matches_count
+ */
+function bes_radius_search_emit_debug_log(
+    string $location,
+    int $radius_km,
+    array $center_member_ids,
+    array $members,
+    ?array $center_used,
+    ?string $center_source,
+    bool $is_short_numeric,
+    int $matches_count
+): void {
+    $client_centroid = !empty($center_member_ids)
+        ? bes_compute_members_centroid($center_member_ids, $members)
+        : null;
+
+    $nominatim_coords = !empty($location) ? bes_geocode_location_query($location) : null;
+
+    $valid_geo = 0;
+    foreach ($members as $m) {
+        $lat = $m['contact']['geoPositionCoords']['lat']
+            ?? $m['contact.geoPositionCoords.lat']
+            ?? null;
+        $lng = $m['contact']['geoPositionCoords']['lng']
+            ?? $m['contact.geoPositionCoords.lng']
+            ?? null;
+        if ($lat === null || $lng === null) {
+            continue;
+        }
+        $lat = (float) $lat;
+        $lng = (float) $lng;
+        if ($lat === 0.0 && $lng === 0.0) {
+            continue;
+        }
+        ++$valid_geo;
+    }
+
+    $payload = [
+        'location'               => $location,
+        'radius_km'              => $radius_km,
+        'is_short_numeric_plz'   => $is_short_numeric,
+        'center_member_ids'      => [
+            'count'    => count($center_member_ids),
+            'centroid' => $client_centroid,
+        ],
+        'nominatim_coords'       => $nominatim_coords,
+        'members_total'           => count($members),
+        'members_valid_geo_count' => $valid_geo,
+        'center_used'             => $center_used
+            ? [
+                'lat'    => $center_used['lat'],
+                'lng'    => $center_used['lng'],
+                'source' => $center_source,
+            ]
+            : null,
+        'matches_count'          => $matches_count,
+    ];
+
+    error_log('[BES radius-search debug] ' . wp_json_encode($payload, JSON_UNESCAPED_UNICODE));
 }
 
 /**

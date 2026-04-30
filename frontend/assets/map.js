@@ -103,8 +103,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const filterFieldsArray = Array.isArray(filterFields) ? filterFields : [];
     console.log('E2T Map: filterFieldsArray:', filterFieldsArray);
 
+    const countryFilterLabels = data.countryFilterLabels || {};
+    const fieldMetaById = {};
     filterFieldsArray.forEach((field) => {
       filterOptions[field.id] = new Set();
+      fieldMetaById[field.id] = field;
     });
 
     markers.forEach((marker) => {
@@ -129,8 +132,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Sortiere Optionen und fülle Select-Felder (vorher leeren, "Alle" behalten)
     selectFilters.forEach((select) => {
+      if (select.classList.contains('bes-radius-select')) {
+        return;
+      }
       const fieldId = select.getAttribute('data-field');
-      const options = Array.from(filterOptions[fieldId] || []).sort();
+      if (!fieldId) {
+        return;
+      }
+      const isCountry = fieldMetaById[fieldId] && fieldMetaById[fieldId].countryFilter;
+      const options = Array.from(filterOptions[fieldId] || []).sort((a, b) => {
+        if (isCountry) {
+          const la = countryFilterLabels[a] || a;
+          const lb = countryFilterLabels[b] || b;
+          return la.localeCompare(lb, 'de', { sensitivity: 'base' });
+        }
+        return a.localeCompare(b, 'de', { sensitivity: 'base' });
+      });
 
       const firstOption = select.querySelector('option[value=""]');
       select.innerHTML = '';
@@ -146,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
       options.forEach((option) => {
         const opt = document.createElement('option');
         opt.value = option;
-        opt.textContent = option;
+        opt.textContent = isCountry && countryFilterLabels[option] ? countryFilterLabels[option] : option;
         select.appendChild(opt);
       });
 

@@ -1,6 +1,8 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+require_once __DIR__ . '/country-filter-normalize.php';
+
 /**
  * Hilfsfunktionen für die einheitliche Filterleiste (Kacheln & Karte).
  */
@@ -215,6 +217,9 @@ function bes_collect_filter_values(array $members, array $filter_fields, callabl
         }
 
         sort($values);
+        if (function_exists('bes_field_is_country_filter') && bes_field_is_country_filter($field)) {
+            $values = bes_country_filter_merge_distinct_values($values);
+        }
         $filter_values[$fid] = $values;
     }
 
@@ -270,6 +275,8 @@ function bes_render_filterbar(array $filter_fields, array $filter_values, array 
                     str_contains($fid, 'plz');
                 $is_city_field = str_contains($fid, 'City') || str_contains($fid, 'city') ||
                     str_contains($label, 'Stadt') || str_contains($label, 'Ort');
+                $is_country_filter = function_exists('bes_field_is_country_filter')
+                    && bes_field_is_country_filter(['id' => $fid, 'label' => $label]);
                 ?>
                 <div class="bes-filter">
                     <label><?php echo esc_html($label); ?></label>
@@ -283,18 +290,23 @@ function bes_render_filterbar(array $filter_fields, array $filter_values, array 
                         <div class="bes-radius-wrapper" style="display:none;" data-for-field="<?php echo esc_attr($fid); ?>">
                             <select class="bes-radius-select" data-for-field="<?php echo esc_attr($fid); ?>">
                                 <option value="0"><?php esc_html_e('Exakt', 'bseasy-sync'); ?></option>
-                                <option value="10">10 km</option>
-                                <option value="25" selected>25 km</option>
+                                <option value="10" selected>10 km</option>
+                                <option value="25">25 km</option>
                                 <option value="50">50 km</option>
                                 <option value="100">100 km</option>
                             </select>
                         </div>
                     <?php else : ?>
-                        <select data-field="<?php echo esc_attr($fid); ?>">
+                        <select data-field="<?php echo esc_attr($fid); ?>"<?php echo $is_country_filter ? ' data-bes-country-filter="1"' : ''; ?>>
                             <option value=""><?php esc_html_e('Alle', 'bseasy-sync'); ?></option>
                             <?php if (isset($filter_values[$fid])) : ?>
                                 <?php foreach ($filter_values[$fid] as $value) : ?>
-                                    <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($value); ?></option>
+                                    <?php
+                                    $disp = ($is_country_filter && function_exists('bes_country_filter_option_label'))
+                                        ? bes_country_filter_option_label($value)
+                                        : $value;
+                                    ?>
+                                    <option value="<?php echo esc_attr($value); ?>"><?php echo esc_html($disp); ?></option>
                                 <?php endforeach; ?>
                             <?php endif; ?>
                         </select>

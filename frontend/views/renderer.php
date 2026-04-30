@@ -484,6 +484,16 @@ function bes_render_members(): string
         return $v !== '' && $v !== 'null' && $v !== 'undefined' && $v !== '[]';
       }));
 
+      $is_country_field = function_exists('bes_field_is_country_filter') && bes_field_is_country_filter($field);
+      if ($is_country_field && !empty($raw_values_for_attr)) {
+          $norm_attr_parts = [];
+          foreach ($raw_values_for_attr as $v) {
+              $iso = bes_normalize_country_token($v);
+              $norm_attr_parts[] = $iso ?: $v;
+          }
+          $raw_values_for_attr = array_values(array_unique($norm_attr_parts));
+      }
+
       // Prüfe ob Wert vorhanden (Arrays: nicht leer)
       if (empty($raw_values_for_attr) || 
           (is_array($raw_value) && empty($raw_value)) ||

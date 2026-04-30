@@ -219,9 +219,24 @@ window.addEventListener("load", function () {
             $filterbar.find("#bes-search").val(v);
           } else if (k.startsWith("f_")) {
             const fid = k.slice(2);
-            $filterbar.find("[data-field]").filter(function () {
+            const $el = $filterbar.find("[data-field]").filter(function () {
               return String($(this).data("field") || "").trim() === fid;
-            }).val(v);
+            });
+            if ($el.length) {
+              let setVal = v;
+              if (
+                $el.is("select") &&
+                $el.attr("data-bes-country-filter") === "1" &&
+                window.bes_ajax &&
+                bes_ajax.country_filter_alias_normalize
+              ) {
+                const nv = bes_ajax.country_filter_alias_normalize[v.toLowerCase()];
+                if (nv) {
+                  setVal = nv;
+                }
+              }
+              $el.val(setVal);
+            }
           }
         });
         console.log("🔗 Filter aus URL-Hash wiederhergestellt");
@@ -239,12 +254,12 @@ window.addEventListener("load", function () {
           applyFilters();
           return;
         }
-        // Sichtbare Karten-IDs für Centroid-Fallback sammeln
-        // (wenn Geocoding scheitert, z.B. partielle PLZ → PHP nutzt Schwerpunkt der sichtbaren Mitglieder)
-        const visibleIds = [];
-        $cards.filter(":visible").each(function () {
+        // Alle Karten-IDs (DOM-Reihenfolge): Centroid-Fallback im Backend soll nicht von
+        // :visible abhängen (Infinite Scroll / gefilterte Anzeige liefert sonst willkürliche Teilmengen).
+        const allMemberIds = [];
+        $cards.each(function () {
           const id = String($(this).data("member-id") || "").trim();
-          if (id) visibleIds.push(id);
+          if (id) allMemberIds.push(id);
         });
         $.ajax({
           url: bes_ajax.ajax_url,
@@ -254,7 +269,7 @@ window.addEventListener("load", function () {
             nonce: bes_ajax.nonce,
             location: q,
             radius_km: radiusKm,
-            center_member_ids: visibleIds,
+            center_member_ids: allMemberIds,
           },
           success: function (resp) {
             if (resp.success && Array.isArray(resp.data.member_ids)) {
@@ -286,7 +301,7 @@ window.addEventListener("load", function () {
           $wrapper.hide();
           // Radius zurücksetzen wenn Feld geleert
           const $rs = $wrapper.find(".bes-radius-select");
-          $rs.val("25");
+          $rs.val("10");
           radiusAllowedIds = null;
         }
       }
@@ -437,10 +452,15 @@ window.addEventListener("load", function () {
         }
 
         // Füge sortierte Optionen hinzu
+        const isCountrySelect = $select.attr("data-bes-country-filter") === "1";
+        const countryLabels =
+          window.bes_ajax && bes_ajax.country_filter_labels ? bes_ajax.country_filter_labels : {};
         sorted.forEach((val) => {
-          // HTML-Escaping für Option-Wert und -Text
           const escapedVal = $("<div>").text(val).html();
-          $select.append(`<option value="${escapedVal}">${escapedVal}</option>`);
+          const labelText =
+            isCountrySelect && countryLabels[val] ? countryLabels[val] : val;
+          const escapedLabel = $("<div>").text(labelText).html();
+          $select.append(`<option value="${escapedVal}">${escapedLabel}</option>`);
         });
 
         console.log(`✅ Dropdown für ${fieldId} befüllt mit ${sorted.length} Optionen`);
@@ -700,7 +720,7 @@ window.addEventListener("load", function () {
         // Radius-Filter zurücksetzen
         radiusAllowedIds = null;
         $filterbar.find(".bes-radius-wrapper").hide();
-        $filterbar.find(".bes-radius-select").val("25");
+        $filterbar.find(".bes-radius-select").val("10");
         // URL-Hash löschen
         if (window.location.hash.startsWith("#bes:")) {
           history.replaceState(null, "", window.location.pathname + window.location.search);
@@ -719,8 +739,40 @@ window.addEventListener("load", function () {
       // URL-Hash wiederherstellen (falls vorhanden) vor initialer Filterung
       restoreFromUrlHash();
 
-      // Initiale Filterung durchführen (falls bereits Werte gesetzt sind)
-      applyFilters();
+      // PLZ/Stadt aus Hash: Umkreis-Zeile zeigen und 10-km-Suche sofort anwenden
+      (function applyInitialLocationRadius() {
+        let loc = null;
+        let $inp = null;
+        $filterbar.find(".bes-filter-zip").each(function () {
+          const v = ($(this).val() || "").trim();
+          if (v && !loc) {
+            loc = v;
+            $inp = $(this);
+          }
+        });
+        if (!loc) {
+          $filterbar.find(".bes-filter-city").each(function () {
+            const v = ($(this).val() || "").trim();
+            if (v && !loc) {
+              loc = v;
+              $inp = $(this);
+            }
+          });
+        }
+        if (loc && $inp && $inp.length) {
+          updateRadiusVisibility($inp);
+          const fid = String($inp.data("field") || "").trim();
+          const $rs = $filterbar.find(".bes-radius-select").filter(function () {
+            return $(this).data("for-field") === fid;
+          });
+          const radiusKm = parseInt($rs.val() || "0", 10);
+          if (radiusKm > 0) {
+            runRadiusSearch(loc, radiusKm);
+            return;
+          }
+        }
+        applyFilters();
+      })();
     }
 
     // ============================================

@@ -492,8 +492,8 @@ function bes_render_members_map(): string
         // Nur URL setzen, wenn Bild tatsächlich existiert
         $img_url = file_exists($img_path) ? BES_UPLOADS_URL . 'img/' . $id . '.png' : null;
 
-        // Filter-Werte sammeln (konsistent mit Liste: clean_value + Normalisierung)
-        $filter_values = [];
+        // Filter-Werte für diesen Marker (nicht die globale $filter_values der Leiste überschreiben)
+        $marker_filters = [];
         foreach ($filter_fields as $field) {
             $fid = $field['id'];
             $raw_value = $get_value($member, $fid);
@@ -536,9 +536,18 @@ function bes_render_members_map(): string
                     $normalized_values[] = $cleaned;
                 }
             }
-            
+
+            if (function_exists('bes_field_is_country_filter') && bes_field_is_country_filter($field)) {
+                $norm_country = [];
+                foreach ($normalized_values as $v) {
+                    $iso = bes_normalize_country_token($v);
+                    $norm_country[] = $iso ?: $v;
+                }
+                $normalized_values = array_values(array_unique($norm_country));
+            }
+
             // Immer Array setzen (auch wenn leer)
-            $filter_values[$fid] = $normalized_values;
+            $marker_filters[$fid] = $normalized_values;
         }
 
         // Popup-Inhalte rendern (wie Cards-Ansicht)
@@ -551,7 +560,7 @@ function bes_render_members_map(): string
             'lng' => floatval($lng),
             'name' => esc_html($name),
             'city' => esc_html($city),
-            'filters' => $filter_values,
+            'filters' => $marker_filters,
             'popupAbove' => $popup_above,
             'popupBelow' => $popup_below,
         ];
@@ -589,12 +598,19 @@ function bes_render_members_map(): string
 
         <!-- Karte mit Data-Attributen als Fallback -->
         <?php
+        $bes_map_filter_fields_meta = array_values(array_map(static function ($f) {
+            return [
+                'id' => $f['id'],
+                'label' => $f['label'] ?? '',
+                'countryFilter' => function_exists('bes_field_is_country_filter') && bes_field_is_country_filter($f),
+            ];
+        }, $filter_fields));
+        $bes_map_country_labels = function_exists('bes_country_filter_labels_js') ? bes_country_filter_labels_js() : [];
+
         $map_data_json = wp_json_encode([
             'markers' => $markers,
-            'filterFields' => array_values(array_map(fn($f) => [
-                'id' => $f['id'],
-                'label' => $f['label'] ?? ''
-            ], $filter_fields)),
+            'filterFields' => $bes_map_filter_fields_meta,
+            'countryFilterLabels' => $bes_map_country_labels,
             'mapSettings' => [
                 'center' => [$map_center_lat, $map_center_lng],
                 'zoom' => $map_zoom,
@@ -607,10 +623,7 @@ function bes_render_members_map(): string
              class="bes-map" 
              style="height: 600px; border-radius: 8px; margin-top: 20px;"
              data-map-markers="<?php echo esc_attr(wp_json_encode($markers, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); ?>"
-             data-map-filters="<?php echo esc_attr(wp_json_encode(array_values(array_map(fn($f) => [
-                 'id' => $f['id'],
-                 'label' => $f['label'] ?? ''
-             ], $filter_fields)), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); ?>"
+             data-map-filters="<?php echo esc_attr(wp_json_encode($bes_map_filter_fields_meta, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); ?>"
              data-map-settings="<?php echo esc_attr(wp_json_encode([
                  'center' => [$map_center_lat, $map_center_lng],
                  'zoom' => $map_zoom,

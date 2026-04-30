@@ -80,10 +80,18 @@ add_shortcode('bes_members', function ($atts) {
   // defer: JS blockiert das Rendering nicht
   wp_script_add_data('bes-frontend-script', 'defer', true);
 
+  if (!function_exists('bes_country_filter_labels_js')) {
+    require_once dirname(__DIR__) . '/includes/filter-helpers.php';
+  }
+
   // ✅ AJAX-Variablen für Frontend (inkl. Nonce)
   wp_localize_script('bes-frontend-script', 'bes_ajax', [
     'ajax_url' => admin_url('admin-ajax.php'),
-    'nonce' => wp_create_nonce('bes_filter_members_nonce')
+    'nonce' => wp_create_nonce('bes_filter_members_nonce'),
+    'country_filter_labels' => function_exists('bes_country_filter_labels_js') ? bes_country_filter_labels_js() : [],
+    'country_filter_alias_normalize' => function_exists('bes_country_filter_alias_normalize_js')
+      ? bes_country_filter_alias_normalize_js()
+      : [],
   ]);
 
   // Map-Assets einbinden (wenn Karte benötigt)
