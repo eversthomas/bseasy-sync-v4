@@ -52,7 +52,7 @@ if (defined('WP_DEBUG') && WP_DEBUG && function_exists('bes_write_debug_log')) {
         </div>
         <div class="bes-footer__text">
             <p class="bes-footer__line">
-                <strong>BSEasy Sync</strong> v<?php echo defined('BES_VERSION') ? esc_html(BES_VERSION) : '3.0.0'; ?> 
+                <strong>BSEasy Sync</strong> v<?php echo defined('BES_VERSION') ? esc_html(BES_VERSION) : '4.0.0'; ?> 
                 | Entwickelt von <a href="https://bezugssysteme.de" target="_blank" rel="noopener">Tom Evers</a> 
                 | <a href="https://bezugssysteme.de" target="_blank" rel="noopener">bezugssysteme.de</a>
             </p>
