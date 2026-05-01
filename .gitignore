@@ -53,6 +53,12 @@ uploads/
 *.tar.gz
 *.tar
 
+# Claude Code Arbeitsverzeichnisse
+.claude/
+
+# Entwicklungsreferenz
+dev/
+
 # Debug-Dateien
 debug.log
 error_log

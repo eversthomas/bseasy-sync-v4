@@ -10,6 +10,10 @@ Dieses Dokument listet alle Module des Plugins mit ihren Dateien und Funktionen.
 - Mitgliederdaten: ausschließlich über `includes/data/member-repository.php`
 - Design-Einstellungen: ausschließlich über `includes/design/design-settings.php`
 
+**Weitere Dokumentation:**
+- `README.md` (Setup/Shortcodes, High-Level Überblick)
+- `dev/ROADMAP.md` (interne Roadmap, nicht produktionsrelevant)
+
 ---
 
 ## Inhaltsverzeichnis
@@ -111,6 +115,12 @@ Design-Einstellungen liegen hier, da sowohl Admin (Speichern) als auch Frontend 
 | `bes_save_design_settings(array $settings): bool` | Speichert und validiert Design-Einstellungen, leert Cache |
 | `bes_validate_color(string $color): bool` | Validiert Hex-, RGB-, RGBA- und CSS-Farbwerte |
 | `bes_generate_design_css(bool $with_style_tags): string` | Generiert Inline-CSS aus gespeicherten Farbwerten |
+
+**Wichtige Keys in `bes_card_design_settings`:**
+- Card: `card_bg`, `card_border`, `card_text`, `card_link`, `card_stripe`
+- Badge: `badge_bg`, `badge_text`
+- Button: `button_bg`, `button_bg_hover`, `button_text`
+- Toggle: `image_shadow` (bool)
 
 ---
 
@@ -408,21 +418,6 @@ Registriert alle `wp_ajax_bes_v3_*`-Actions. Bindet ausschließlich `sync/sync-s
 | `bes_camelcase_to_label(string $str): string` | Konvertiert CamelCase zu lesbarem Text |
 | `bes_auto_generate_labels(array $fields): array` | Generiert Labels für alle Felder automatisch |
 
-### `admin/fields/includes/field-intelligence.php`
-| Funktion | Beschreibung |
-|----------|-------------|
-| `bes_analyze_field_intelligence(array $fields): array` | Analysiert alle Felder, gibt Statistiken und Vorschläge zurück |
-| `bes_calculate_field_statistics(array $fields): array` | Berechnet Statistiken (Typ, Bereich, Status) |
-| `bes_generate_field_suggestions(array $fields): array` | Generiert Label- und Kategorievorschläge |
-| `bes_suggest_label_from_content(array $field): string` | Schlägt Label basierend auf Feldinhalt vor |
-| `bes_calculate_label_confidence(array $field, string $label): float` | Berechnet Konfidenzwert für Vorschlag |
-| `bes_explain_label_suggestion(array $field): string` | Erklärt warum ein Label vorgeschlagen wurde |
-| `bes_suggest_category(array $field): string` | Schlägt Feldkategorie vor |
-| `bes_explain_category_suggestion(array $field): string` | Erklärt Kategorie-Vorschlag |
-| `bes_generate_recommendations(array $fields): array` | Erzeugt Admin-Empfehlungen |
-| `bes_find_potential_duplicates(array $fields): array` | Findet potenzielle Duplikate |
-| `bes_suggest_field_groupings(array $fields): array` | Schlägt Feldgruppierungen vor |
-
 ### `admin/fields/includes/fields-template.php`
 | Funktion | Beschreibung |
 |----------|-------------|
@@ -435,6 +430,12 @@ Registriert alle `wp_ajax_bes_v3_*`-Actions. Bindet ausschließlich `sync/sync-s
 
 ### `admin/fields/includes/design-settings.php` *(Compatibility-Stub)*
 Delegiert an `includes/design/design-settings.php`. Nur für Abwärtskompatibilität.
+
+### Feld-Badges (Backend-Konfiguration)
+Badges sind ein Feld-Flag in `fields-config.json` und werden im Feld-UI als Checkbox gepflegt:
+- Checkbox: „Als Badge anzeigen“
+- Speicherung: via `wp_ajax_bes_save_fields` (in `admin/fields/fields-handler.php`)
+- Rendering: Frontend sammelt Badge-Feld-IDs und erzeugt daraus Badge-Pills
 
 ### `admin/calendar-handler.php`
 Verarbeitet Kalender-Konfigurationen. *(Hook: `admin_post_bes_save_calendars`)*
@@ -474,10 +475,21 @@ Registriert `[bes_members]`-Shortcode.
 
 Bindet bei Bedarf Leaflet.js, Marker-Clustering und Frontend-Assets ein.
 
+### `frontend/assets/`
+- `frontend/assets/frontend.css` — Styles (inkl. neues Card-Design, Badge-Pills, Design-Token-Overrides)
+- `frontend/assets/frontend.js` — Frontend-Interaktionen (Filter, Toggle/Accordion, Infinite Scroll/Load More)
+- `frontend/assets/map.js` — Leaflet-Interaktionen
+- `frontend/assets/calendar.js` — Kalender-Interaktionen
+
 ### `frontend/views/renderer.php`
 | Funktion | Beschreibung |
 |----------|-------------|
 | `bes_render_members(array $atts): string` | Rendert Mitgliederkarten als HTML (mit Transient-Cache) |
+
+**Badge-System (Frontend):**
+- Badge-Feld-IDs aus `fields-config.json` (Flag `badge=true`)
+- Ausgabe als „Pills“ im Card-Body (`.theme-pill`)
+- Badge-Felder werden im normalen Feld-Loop ausgeschlossen (keine doppelte Ausgabe)
 
 ### `frontend/views/map-render.php`
 | Funktion | Beschreibung |
@@ -515,6 +527,15 @@ Bindet bei Bedarf Leaflet.js, Marker-Clustering und Frontend-Assets ein.
 | `bes_clean_filter_value(string $value): string` | Bereinigt und sanitisiert Filterwerte |
 | `bes_collect_filter_values(array $members, array $fields): array` | Sammelt verfügbare Filterwerte aus Mitgliederdaten |
 | `bes_render_filterbar(array $fields, array $values): string` | Rendert HTML-Filterleiste |
+
+### `frontend/includes/geo-utils.php`
+Geo-/Radius-Helfer für Umkreissuche und Distanzberechnung (nutzt `bes_members_get_all()` als Datenquelle).
+
+### `frontend/includes/schema.php`
+Schema.org-Ausgabe/Hilfsfunktionen für strukturierte Daten im Frontend.
+
+### `frontend/includes/og-meta.php`
+OpenGraph/Sharing-Meta (falls im Projekt aktiviert/ausgegeben).
 
 ---
 
