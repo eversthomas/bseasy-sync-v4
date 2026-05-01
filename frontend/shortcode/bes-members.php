@@ -70,6 +70,16 @@ add_shortcode('bes_members', function ($atts) {
     $plugin_version
   );
 
+  if (!wp_script_is('jquery', 'registered')) {
+    wp_register_script(
+      'jquery',
+      includes_url('js/jquery/jquery.min.js'),
+      [],
+      '3.7.1',
+      true
+    );
+  }
+
   wp_enqueue_script(
     'bes-frontend-script',
     $plugin_url . 'frontend/assets/frontend.js',

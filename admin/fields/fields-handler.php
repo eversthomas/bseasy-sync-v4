@@ -176,6 +176,7 @@ function bes_load_fields_config(): array {
         foreach ($cfg as $item) {
             if (!isset($item['id'])) continue;
             $id = (string)$item['id'];
+            $item['badge'] = $item['badge'] ?? false;
             $migrated[$id] = $item;
         }
         bes_save_json('fields-config.json', $migrated);
@@ -183,6 +184,11 @@ function bes_load_fields_config(): array {
     }
 
     // Neue Struktur: Objekt (assoziatives Array)
+    foreach ($cfg as &$field) {
+        if (!is_array($field)) continue;
+        $field['badge'] = $field['badge'] ?? false;
+    }
+    unset($field);
     return $cfg;
 }
 
@@ -675,6 +681,7 @@ add_action('wp_ajax_bes_save_fields', function () {
             'show_label'       => isset($item['show_label']) ? (bool)$item['show_label'] : true,
             'filterable'       => !empty($item['filterable']),
             'show_in_filterbar' => !empty($item['show_in_filterbar']),
+            'badge'            => !empty($item['badge']),
             'filter_priority'  => isset($item['filter_priority']) && $item['filter_priority'] !== null ? intval($item['filter_priority']) : null,
             'inline_group'     => isset($item['inline_group']) ? sanitize_text_field($item['inline_group']) : '',
             'favorite'         => !empty($item['favorite']),
@@ -845,6 +852,8 @@ add_action('wp_ajax_bes_save_design', function () {
         'card_text' => isset($_POST['card_text']) ? sanitize_text_field($_POST['card_text']) : '',
         'card_link' => isset($_POST['card_link']) ? sanitize_text_field($_POST['card_link']) : '',
         'card_stripe' => isset($_POST['card_stripe']) ? sanitize_text_field($_POST['card_stripe']) : '',
+        'badge_bg' => isset($_POST['badge_bg']) ? sanitize_text_field($_POST['badge_bg']) : '',
+        'badge_text' => isset($_POST['badge_text']) ? sanitize_text_field($_POST['badge_text']) : '',
         'image_shadow' => isset($_POST['image_shadow']) ? (bool)$_POST['image_shadow'] : false,
         'button_bg' => isset($_POST['button_bg']) ? sanitize_text_field($_POST['button_bg']) : '',
         'button_bg_hover' => isset($_POST['button_bg_hover']) ? sanitize_text_field($_POST['button_bg_hover']) : '',

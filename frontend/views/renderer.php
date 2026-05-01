@@ -402,6 +402,7 @@ function bes_render_members(): string
     // 2️⃣ Iteriere in Reihenfolge und erkenne Gruppenwechsel
     foreach ($fields_in_area as $field) {
       if ($field['id'] === '_profilePicture') continue;
+      if (!empty($field['badge'])) continue;
 
       $fid    = $field['id'];
       $label  = isset($field['label']) && trim($field['label']) !== '' ? esc_html($field['label']) : '';
@@ -527,6 +528,8 @@ function bes_render_members(): string
   // 🧱 Filterbar + Mitgliederkarten rendern
   // ----------------------------------------------------------
   // WICHTIG: ALLES im ob_start() Block rendern, um Escaping-Probleme zu vermeiden!
+  $config = array_column($config, null, 'id');
+  $badge_field_ids = array_keys(array_filter($config, fn($f) => !empty($f['badge'])));
   ob_start(); ?>
   
   <!-- DEBUG: START bes_render_members output -->
@@ -534,7 +537,7 @@ function bes_render_members(): string
   <?php echo bes_render_filterbar($filter_fields, $filter_values); ?>
   
   <!-- 🧱 Mitgliederkarten Grid -->
-  <div class="bes-members-grid">
+  <div class="bes-members-grid network-grid" role="list" aria-label="Mitglieder">
     <?php 
     $card_index = 0; // Index für Lazy-Loading-Optimierung
     foreach ($members as $member): 
@@ -567,30 +570,127 @@ function bes_render_members(): string
       
       $card_index++;
       ?>
-      <article class="bes-card bes-member-card" data-member-id="<?php echo esc_attr($id); ?>">
-        <h2 class="bes-sr-only"><?php echo $alt_text; ?></h2>
-        <div class="bes-member-content">
-          <div class="bes-fields-top">
-            <?php if (file_exists($img_path)): ?>
-              <div class="bes-member-image">
-                <img decoding="async" <?php echo $loading_attr; ?> src="<?php echo esc_url($img_url); ?>" alt="<?php echo $alt_text; ?>">
-              </div>
-            <?php endif; ?>
-            <?php echo $render_area($member, $config, 'above', $get_value, $format_value); ?>
-            <?php $below_html = $render_area($member, $config, 'below', $get_value, $format_value); ?>
-            <?php if ($below_html): ?>
-              <button class="bes-toggle-btn" aria-expanded="false">Mehr anzeigen</button>
-            <?php endif; ?>
+      <?php
+      // Badge-Werte aus konfigurierten Badge-Feldern sammeln
+      $badge_values = [];
+      foreach ($badge_field_ids as $badge_fid) {
+          $raw = $get_value($member, $badge_fid);
+          if ($raw === null || $raw === '') continue;
+          if (is_array($raw)) {
+              $parts = array_map('trim', $raw);
+          } else {
+              // Kommagetrennte Werte aufsplitten (z.B. "Coaching, OE, Supervision")
+              $parts = array_map('trim', explode(',', (string)$raw));
+          }
+          foreach ($parts as $part) {
+              if ($part !== '') $badge_values[] = $part;
+          }
+      }
+
+      // Expand-Panel nur wenn below-Felder vorhanden
+      $below_html = $render_area($member, $config, 'below', $get_value, $format_value);
+      $has_expand = !empty($below_html);
+      $expand_id  = 'expand-' . esc_attr($id);
+      ?>
+
+      <article
+          class="member-card"
+          role="listitem"
+          data-member-id="<?php echo esc_attr($id); ?>"
+          aria-label="<?php echo esc_attr($alt_text); ?>"
+      >
+          <?php /* Bildbereich – immer vorhanden, mit Placeholder-Fallback */ ?>
+          <div class="card-image" aria-hidden="true">
+              <?php if (file_exists($img_path)): ?>
+                  <img
+                      src="<?php echo esc_url($img_url); ?>"
+                      alt="<?php echo esc_attr($alt_text); ?>"
+                      loading="lazy"
+                      decoding="async"
+                  >
+              <?php else: ?>
+                  <div class="card-placeholder" aria-hidden="true">
+                      <div class="card-avatar">
+                          <?php echo esc_html(mb_substr($alt_text, 0, 1)); ?>
+                      </div>
+                  </div>
+              <?php endif; ?>
           </div>
 
-          <?php if ($below_html): ?>
-            <div class="bes-fields-middle">
-              <?php echo $below_html; ?>
-              <button class="bes-toggle-btn" aria-expanded="false">Weniger anzeigen</button>
-            </div>
+          <?php /* Card-Body: above-Felder (ohne Badge-Felder) + Badge-Pills */ ?>
+          <div class="card-body">
+              <?php echo $render_area($member, $config, 'above', $get_value, $format_value); ?>
+
+              <?php if (!empty($badge_values)): ?>
+                  <div class="card-themes" aria-label="Themenschwerpunkte">
+                      <?php foreach ($badge_values as $badge): ?>
+                          <span class="theme-pill"><?php echo esc_html($badge); ?></span>
+                      <?php endforeach; ?>
+                  </div>
+              <?php endif; ?>
+          </div>
+
+          <?php /* Card-Footer: Location (erstes filterable above-Feld) + Expand-Button */ ?>
+          <div class="card-footer">
+              <?php
+              // Location: bevorzugt Stadt-Feld, Fallback auf erstes filterable above-Feld
+              $location_val = '';
+
+              // Versuch 1: explizit Stadt-Feld
+              $city_fid = 'contact.contact.companyCity';
+              if (isset($config[$city_fid]) && !empty($config[$city_fid]['show'])) {
+                  $v = $get_value($member, $city_fid);
+                  if ($v !== null && $v !== '') {
+                      $location_val = $v;
+                  }
+              }
+
+              // Fallback: erstes Feld mit show=true, area=above, filterable=true
+              if ($location_val === '') {
+                  foreach ($config as $fid => $fcfg) {
+                      if (!empty($fcfg['show']) && ($fcfg['area'] ?? '') === 'above' && !empty($fcfg['filterable'])) {
+                          $v = $get_value($member, $fid);
+                          if ($v !== null && $v !== '') {
+                              $location_val = $v;
+                              break;
+                          }
+                      }
+                  }
+              }
+              if ($location_val): ?>
+                  <span class="card-location"><?php echo esc_html($location_val); ?></span>
+              <?php endif; ?>
+
+              <?php if ($has_expand): ?>
+                  <button
+                      class="expand-btn"
+                      aria-expanded="false"
+                      aria-controls="<?php echo $expand_id; ?>"
+                  >
+                      <span class="label-more">Weiter lesen</span>
+                      <span class="label-less">Weniger</span>
+                  </button>
+              <?php endif; ?>
+          </div>
+
+          <?php /* Expand-Panel: below-Felder */ ?>
+          <?php if ($has_expand): ?>
+              <div
+                  class="expand-panel"
+                  id="<?php echo $expand_id; ?>"
+                  role="region"
+                  aria-label="<?php echo esc_attr('Profil ' . $alt_text); ?>"
+              >
+                  <div class="expand-panel-inner">
+                      <div class="expand-content">
+                          <?php echo $below_html; ?>
+                      </div>
+                  </div>
+              </div>
           <?php endif; ?>
-        </div>
-        <?php echo bes_generate_member_schema_tag($member, $alt_text, $id, (file_exists($img_path) ? $img_url : '')); ?>
+
+          <?php echo bes_generate_member_schema_tag($member, $alt_text, $id, (file_exists($img_path) ? $img_url : '')); ?>
+
       </article>
     <?php endforeach; ?>
   </div>

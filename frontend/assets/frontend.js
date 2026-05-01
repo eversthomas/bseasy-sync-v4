@@ -18,7 +18,7 @@ window.addEventListener("load", function () {
 
   // Delay um sicherzustellen dass DOM komplett geladen ist
   setTimeout(function() {
-    const $cards = $(".bes-member-card");
+    const $cards = $(".member-card");
     const $grid = $(".bes-members-grid");
     const $btnMore = $("#bes-load-more");
 
@@ -819,68 +819,42 @@ window.addEventListener("load", function () {
       }
     }, 500);
 
- // ============================================
-// ⬇️ Toggle ("Mehr anzeigen" / "Weniger anzeigen") – Moderne Slide-Down Animation
 // ============================================
-
-// Initialisierung: Alle Cards starten im geschlossenen Zustand
-$(".bes-member-card").each(function () {
-  const $card = $(this);
-  const $btn = $card.find(".bes-toggle-btn");
-  
-  if ($btn.length) {
-    $btn.attr("aria-expanded", "false");
-  }
+// ⬇️ Toggle (Expand/Collapse) – Accordion
+// ============================================
+$(".member-card").each(function () {
+  $(this).find(".expand-btn").attr("aria-expanded", "false");
 });
 
-// Event-Delegation für Toggle-Buttons (funktioniert auch für dynamisch hinzugefügte Cards)
-// Accordion-Verhalten: Nur eine Card gleichzeitig geöffnet
-$(document).off("click.besToggle", ".bes-toggle-btn");
-$(document).on("click.besToggle", ".bes-toggle-btn", function (e) {
+$(document).off("click.besToggle", ".expand-btn");
+$(document).on("click.besToggle", ".expand-btn", function (e) {
   e.preventDefault();
   e.stopPropagation();
-  
-  const $btn = $(this);
-  const $card = $btn.closest(".bes-member-card");
-  const isExpanded = $card.hasClass("is-expanded");
-  
-  // Alle Toggle-Buttons innerhalb der Card finden
-  const $allButtons = $card.find(".bes-toggle-btn");
-  
-  if (isExpanded) {
-    // Schließen
-    $card.removeClass("is-expanded");
-    $allButtons.attr("aria-expanded", "false");
-    // Texte bleiben unverändert: oberer Button "Mehr anzeigen", unterer Button "Weniger anzeigen"
+
+  const $btn  = $(this);
+  const $card = $btn.closest(".member-card");
+  const isOpen = $card.hasClass("is-open");
+
+  if (isOpen) {
+    $card.removeClass("is-open");
+    $btn.attr("aria-expanded", "false");
   } else {
-    // Accordion-Verhalten: Alle anderen Cards im selben Grid schließen
+    // Accordion: alle anderen Cards im Grid schließen
     const $grid = $card.closest(".bes-members-grid");
-    if ($grid.length > 0) {
-      // Alle anderen Cards im Grid finden und schließen
-      $grid.find(".bes-member-card.is-expanded").not($card).each(function() {
-        const $otherCard = $(this);
-        const $otherButtons = $otherCard.find(".bes-toggle-btn");
-        $otherCard.removeClass("is-expanded");
-        $otherButtons.attr("aria-expanded", "false");
-      });
-    } else {
-      // Fallback: Alle Cards auf der Seite schließen (falls kein Grid vorhanden)
-      $(".bes-member-card.is-expanded").not($card).each(function() {
-        const $otherCard = $(this);
-        const $otherButtons = $otherCard.find(".bes-toggle-btn");
-        $otherCard.removeClass("is-expanded");
-        $otherButtons.attr("aria-expanded", "false");
-      });
-    }
-    
-    // Aktuelle Card öffnen
-    $card.addClass("is-expanded");
-    $allButtons.attr("aria-expanded", "true");
-    // Texte bleiben unverändert: oberer Button "Mehr anzeigen", unterer Button "Weniger anzeigen"
-    
-    // Smooth Scroll zu Button nach Animation (nur auf Mobile, wenn nötig)
+    const $others = ($grid.length ? $grid : $(document))
+      .find(".member-card.is-open")
+      .not($card);
+
+    $others.each(function () {
+      $(this).removeClass("is-open");
+      $(this).find(".expand-btn").attr("aria-expanded", "false");
+    });
+
+    $card.addClass("is-open");
+    $btn.attr("aria-expanded", "true");
+
     if (window.innerWidth < 768) {
-      setTimeout(function() {
+      setTimeout(function () {
         $btn[0].scrollIntoView({ behavior: "smooth", block: "nearest" });
       }, 350);
     }

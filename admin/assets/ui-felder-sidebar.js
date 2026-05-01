@@ -550,6 +550,7 @@ jQuery(document).ready(function ($) {
               <label><input type="checkbox" class="bes-show-label" ${f.show_label ? "checked" : ""}> Label anzeigen</label>
               <label><input type="checkbox" class="bes-filterable-field" ${f.filterable ? "checked" : ""}> Filterbar</label>
               <label><input type="checkbox" class="bes-show-in-filterbar" ${f.show_in_filterbar ? "checked" : ""}> In Filterleiste anzeigen</label>
+              <label><input type="checkbox" class="bes-badge-field" ${f.badge ? "checked" : ""}> Als Badge anzeigen</label>
               <label>Filter-Priorität: <input type="number" class="bes-filter-priority" value="${f.filter_priority !== undefined && f.filter_priority !== null ? f.filter_priority : ""}" placeholder="0" min="0" step="1" style="width: 80px;"></label>
               <label>Gruppe: <input type="text" class="bes-inline-group" value="${f.inline_group || ""}"></label>
             </div>
@@ -850,6 +851,7 @@ saveBtn.on("click", function () {
       f.area = areaKey;
       f.show_label = row.find(".bes-show-label").is(":checked");
       f.filterable = row.find(".bes-filterable-field").is(":checked");
+      f.badge = row.find('.bes-badge-field').is(':checked');
       f.inline_group = inlineGroupVal;
     });
 
@@ -1317,6 +1319,8 @@ saveBtn.on("click", function () {
       card_text: $("#bes-design-card-text-text").val() || $("#bes-design-card-text").val(),
       card_link: $("#bes-design-card-link-text").val() || $("#bes-design-card-link").val(),
       card_stripe: $("#bes-design-card-stripe-text").val() || $("#bes-design-card-stripe").val(),
+      badge_bg: $("#bes-design-badge-bg-text").val() || $("#bes-design-badge-bg").val(),
+      badge_text: $("#bes-design-badge-text-text").val() || $("#bes-design-badge-text").val(),
       image_shadow: $("#bes-design-image-shadow").is(":checked") ? 1 : 0,
       button_bg: $("#bes-design-button-bg-text").val() || $("#bes-design-button-bg").val(),
       button_bg_hover: $("#bes-design-button-bg-hover-text").val() || $("#bes-design-button-bg-hover").val(),
@@ -1381,6 +1385,10 @@ saveBtn.on("click", function () {
           $("#bes-design-card-link-text").val(settings.card_link || "#D99400");
           $("#bes-design-card-stripe").val(settings.card_stripe || "#F7A600");
           $("#bes-design-card-stripe-text").val(settings.card_stripe || "#F7A600");
+          $("#bes-design-badge-bg").val(settings.badge_bg || "#ffffff");
+          $("#bes-design-badge-bg-text").val(settings.badge_bg || "#ffffff");
+          $("#bes-design-badge-text").val(settings.badge_text || "#1c1c1e");
+          $("#bes-design-badge-text-text").val(settings.badge_text || "#1c1c1e");
           $("#bes-design-image-shadow").prop("checked", settings.image_shadow !== false && settings.image_shadow !== 0);
           $("#bes-design-button-bg").val(settings.button_bg || "#F7A600");
           $("#bes-design-button-bg-text").val(settings.button_bg || "#F7A600");

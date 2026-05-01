@@ -25,6 +25,8 @@ function bes_get_default_design_settings(): array {
         'card_text' => '#1c1c1c',
         'card_link' => '#D99400', // Linkfarbe
         'card_stripe' => '#F7A600', // Linker Rahmen (::before)
+        'badge_bg' => '#ffffff',
+        'badge_text' => '#1c1c1e',
         'image_shadow' => true, // Bild-Schatten aktiviert
         'button_bg' => '#F7A600',
         'button_bg_hover' => '#D99400',
@@ -160,6 +162,8 @@ function bes_generate_design_css(bool $with_style_tags = false): string {
     $css .= '  --bes-card-text-custom: ' . esc_attr($settings['card_text']) . ';';
     $css .= '  --bes-card-link-custom: ' . esc_attr($settings['card_link']) . ';';
     $css .= '  --bes-card-stripe-custom: ' . esc_attr($settings['card_stripe']) . ';';
+    $css .= '  --bes-badge-bg-custom: ' . esc_attr($settings['badge_bg']) . ';';
+    $css .= '  --bes-badge-text-custom: ' . esc_attr($settings['badge_text']) . ';';
     $css .= '  --bes-button-bg-custom: ' . esc_attr($settings['button_bg']) . ';';
     $css .= '  --bes-button-bg-hover-custom: ' . esc_attr($settings['button_bg_hover']) . ';';
     $css .= '  --bes-button-text-custom: ' . esc_attr($settings['button_text']) . ';';

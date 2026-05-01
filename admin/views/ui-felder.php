@@ -152,6 +152,22 @@
                 <input type="text" id="bes-design-card-stripe-text" value="<?php echo esc_attr(bes_get_design_settings()['card_stripe']); ?>" style="flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;" placeholder="#F7A600" />
               </div>
             </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 13px;">Badge-Hintergrund</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="color" id="bes-design-badge-bg" value="<?php echo esc_attr(bes_get_design_settings()['badge_bg']); ?>" style="width: 60px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" />
+                <input type="text" id="bes-design-badge-bg-text" value="<?php echo esc_attr(bes_get_design_settings()['badge_bg']); ?>" style="flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;" placeholder="#ffffff" />
+              </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+              <label style="display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 13px;">Badge-Schrift</label>
+              <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <input type="color" id="bes-design-badge-text" value="<?php echo esc_attr(bes_get_design_settings()['badge_text']); ?>" style="width: 60px; height: 40px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer;" />
+                <input type="text" id="bes-design-badge-text-text" value="<?php echo esc_attr(bes_get_design_settings()['badge_text']); ?>" style="flex: 1; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-family: monospace; font-size: 12px;" placeholder="#1c1c1e" />
+              </div>
+            </div>
             
             <div>
               <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
