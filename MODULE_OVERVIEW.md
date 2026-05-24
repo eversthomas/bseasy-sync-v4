@@ -33,6 +33,13 @@ Plugin-Initialisierung, Ladereihenfolge, Lifecycle.
 ### `bootstrap/load.php`
 Zentrale Ladereihenfolge aller Module. Einzige Datei, die direkt aus `bseasy-sync.php` geladen wird.
 
+**Lade-Reihenfolge (V4):**
+1. **Immer:** `includes/` (Konstanten, Repository, Design, Infrastruktur), `bootstrap/debug-log.php`, `bootstrap/legacy-data-paths.php`
+2. **`is_admin() || wp_doing_cron()`:** `sync/sync-service.php`, `sync/runtime/cron-v3.php`, `admin/ajax/ajax-v3.php`, `admin/calendar-handler.php`
+3. **Immer:** `frontend/` (Stubs → Views/Shortcode/AJAX)
+4. **`is_admin()` only:** `bootstrap/admin-page.php`, `bootstrap/admin-menu.php`, `admin/fields/*`, `admin/ajax/ajax-cache.php`, `admin/ajax/ajax-debug.php`, `bootstrap/admin-assets.php`
+5. **Immer:** `bootstrap/plugin-lifecycle.php`
+
 ### `bootstrap/debug-log.php`
 | Funktion | Beschreibung |
 |----------|-------------|
@@ -238,12 +245,31 @@ Einzige Datei, die von außerhalb von `sync/` eingebunden werden darf. Lädt all
 | `bseasy_v3_analyze_custom_fields(array $members): array` | Custom-Felder analysieren |
 | `bseasy_v3_flatten_keys_with_values(array $data, string $prefix): array` | Verschachtelte Struktur zu flachen Schlüssel-Wert-Paaren |
 
-### `sync/v3-consent-audit.php` — Datenprüfung
+### `sync/v3-consent-audit.php` *(Compatibility-Stub)*
+Delegiert an `sync/consent/consent-audit.php`.
+
+### `sync/consent/consent-audit.php` — Consent-Datenprüfung
 | Funktion | Beschreibung |
 |----------|-------------|
-| `bseasy_v3_audit_consent(): void` | Vergleicht lokale Daten mit API-Consent-Status |
+| `bseasy_v3_audit_consent(): array` | Vergleicht lokale Daten mit API-Consent-Status (Serverfilter A/B/C, Differenzliste) |
 | `bseasy_v3_audit_fetch_ids(): array` | Holt Mitglieder-IDs für Audit-Vergleich |
-| `bseasy_v3_audit_local_consent_check(): array` | Prüft Übereinstimmung lokal/API |
+| `bseasy_v3_audit_local_consent_check(): array` | Prüft Übereinstimmung lokal/API pro Mitglied |
+
+Wird von `sync/sync-service.php` geladen; Cron-Hook `bes_run_audit_consent_v3` in `sync/runtime/cron-v3.php`.
+
+---
+
+### Sync-Root-Stubs *(Abwärtskompatibilität)*
+
+Dateien im `sync/`-Root, die nur auf die eigentliche Implementierung weiterleiten:
+
+| Stub | Ziel |
+|------|------|
+| `sync/cron-v3.php` | `sync/runtime/cron-v3.php` |
+| `sync/v3-consent-audit.php` | `sync/consent/consent-audit.php` |
+| `sync/api-core-consent-member-fetch.php` | `sync/client/api-core-consent-member-fetch.php` |
+| `sync/api-core-consent-requests.php` | `sync/client/api-core-consent-requests.php` |
+| `sync/api-core-consent-token.php` | `sync/client/api-core-consent-token.php` |
 
 ---
 
@@ -269,6 +295,9 @@ Einzige Datei, die von außerhalb von `sync/` eingebunden werden darf. Lädt all
 | `bes_consent_api_fetch_member_ids(string $token, int $consent_field_id): array` | Alle Mitglieder-IDs mit gesetztem Consent-Feld holen |
 
 ---
+
+### `sync/consent/consent-bootstrap.php`
+Stellt sicher, dass `BES_DATA` und zugehörige Upload-Pfade definiert sind (z. B. bei WP-Cron ohne vollständigen Plugin-Bootstrap). Wird von `sync/api-core-consent.php` als erstes Consent-Modul geladen.
 
 ### `sync/consent/consent-config.php`
 | Funktion | Beschreibung |
@@ -440,6 +469,18 @@ Badges sind ein Feld-Flag in `fields-config.json` und werden im Feld-UI als Chec
 ### `admin/calendar-handler.php`
 Verarbeitet Kalender-Konfigurationen. *(Hook: `admin_post_bes_save_calendars`)*
 
+### `admin/views/ui-main.php`
+Admin-Hauptlayout: Tab-Navigation (Felder, Kalender, Map, Sync), lädt die Tab-Views per Include. Wird von `bes_admin_page()` eingebunden. Gibt `settings_errors('bes_settings')` nach PRG-Redirect aus.
+
+### `admin/views/ui-felder.php`
+Tab „Felder“: Feldverwaltung-UI (Sidebar per JS, Drag & Drop, Filter-/Badge-Konfiguration). Kommuniziert mit `wp_ajax_bes_get_fields` / `wp_ajax_bes_save_fields`.
+
+### `admin/views/ui-kalender.php`
+Tab „Kalender“: Verwaltung mehrerer iCal-Kalender (Name, ICS-URL, Event-Limit). Formular-Action: `admin_post_bes_save_calendars` via `admin/calendar-handler.php`.
+
+### `admin/views/ui-map.php`
+Tab „Map“: Map-Einstellungen (Center, Zoom, Marker-Stil). Speichert Optionen per POST mit Nonce `bes_map_settings`.
+
 ### `admin/views/ui-sync.php` — Sync-Tab Layout
 Dünnes Layout-Skelett; enthält die gemeinsamen JavaScript-Handler für Explorer, Feldauswahl und Sync.
 Bindet via `require_once` alle vier Partials ein (s.u.).
@@ -466,6 +507,21 @@ HTML: V3 Sync-Karte (Start, Stop, Reset, Merge, Consent Audit).
 
 Öffentliche Ausgabe: Shortcode, Rendering, AJAX-Filterung.
 
+### Frontend-Root-Stubs *(Abwärtskompatibilität)*
+
+| Stub | Ziel |
+|------|------|
+| `frontend/renderer.php` | `frontend/views/renderer.php` |
+| `frontend/map-render.php` | `frontend/views/map-render.php` |
+| `frontend/calendar-render.php` | `frontend/views/calendar-render.php` |
+| `frontend/shortcode.php` | `frontend/shortcode/bes-members.php` |
+| `frontend/ajax-endpoints.php` | `frontend/ajax/ajax-endpoints.php` |
+| `frontend/filter-helpers.php` | `frontend/includes/filter-helpers.php` |
+
+Diese Stubs werden von `bootstrap/load.php` geladen; die Implementierung liegt in den Unterverzeichnissen.
+
+---
+
 ### `frontend/shortcode/bes-members.php`
 Registriert `[bes_members]`-Shortcode.
 
@@ -473,7 +529,7 @@ Registriert `[bes_members]`-Shortcode.
 |----------|-------|-------------|
 | `view` | `kachel`, `map`, `toggle` | Anzeigemodus |
 
-Bindet bei Bedarf Leaflet.js, Marker-Clustering und Frontend-Assets ein.
+Bindet bei Bedarf Leaflet.js (1.9.4), MarkerCluster (1.5.1) und Frontend-Assets ein.
 
 ### `frontend/assets/`
 - `frontend/assets/frontend.css` — Styles (inkl. neues Card-Design, Badge-Pills, Design-Token-Overrides)
@@ -520,6 +576,8 @@ Bindet bei Bedarf Leaflet.js, Marker-Clustering und Frontend-Assets ein.
 | `bes_frontend_generate_design_css(bool $with_style_tags): string` | Generiert Design-CSS für Frontend-Ausgabe |
 
 ### `frontend/includes/filter-helpers.php`
+Lädt `country-filter-normalize.php`. Hilfsfunktionen für die einheitliche Filterleiste (Kacheln & Karte).
+
 | Funktion | Beschreibung |
 |----------|-------------|
 | `bes_get_default_filter_order(): array` | Gibt Standard-Reihenfolge der Filter-Felder zurück |
@@ -527,6 +585,22 @@ Bindet bei Bedarf Leaflet.js, Marker-Clustering und Frontend-Assets ein.
 | `bes_clean_filter_value(string $value): string` | Bereinigt und sanitisiert Filterwerte |
 | `bes_collect_filter_values(array $members, array $fields): array` | Sammelt verfügbare Filterwerte aus Mitgliederdaten |
 | `bes_render_filterbar(array $fields, array $values): string` | Rendert HTML-Filterleiste |
+
+### `frontend/includes/country-filter-normalize.php`
+Länderwert-Normalisierung für die Filterleiste und Karte: Rohwerte aus EasyVerein (z. B. „Deutschland“, „DE“, „D“) werden auf **ISO-3166-1-alpha-2** (DE/AT/CH …) abgebildet; deutsche Anzeigenamen für Dropdowns; Erkennung von Land-Filterfeldern anhand von Feld-ID/Label.
+
+| Funktion | Beschreibung |
+|----------|-------------|
+| `bes_country_iso_german_labels(): array` | ISO-Code → deutscher Anzeigename |
+| `bes_country_alias_to_iso_map(): array` | Alias (kleingeschrieben) → ISO |
+| `bes_country_filter_labels_js(): array` | Labels für `wp_localize_script` (Shortcode) |
+| `bes_country_filter_alias_normalize_js(): array` | Alias-Map für Frontend-JS |
+| `bes_normalize_country_token(string $raw): ?string` | Einzelwert auf ISO normalisieren |
+| `bes_field_is_country_filter(array $field): bool` | Erkennt Land-/Staat-Filterfelder |
+| `bes_country_filter_option_label(string $option_value): string` | Anzeigename für Filteroption |
+| `bes_country_filter_merge_distinct_values(array $raw_values): array` | Deduplizierte, sortierte Filteroptionen |
+
+Eingebunden via `filter-helpers.php`; genutzt in `renderer.php`, `map-render.php`, `shortcode/bes-members.php`.
 
 ### `frontend/includes/geo-utils.php`
 Geo-/Radius-Helfer für Umkreissuche und Distanzberechnung (nutzt `bes_members_get_all()` als Datenquelle).
