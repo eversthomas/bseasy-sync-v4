@@ -50,6 +50,12 @@ if (file_exists(BES_DIR . 'includes/cache-utils.php')) {
     require_once BES_DIR . 'includes/cache-utils.php';
 }
 
+// hosting-compatibility VOR debug-log: bes_write_debug_log() ruft bes_ensure_writable_directory(),
+// das muss verfügbar sein, bevor der Admin-Error-Handler einen Log-Eintrag schreibt.
+if (file_exists(BES_DIR . 'includes/hosting-compatibility.php')) {
+    require_once BES_DIR . 'includes/hosting-compatibility.php';
+}
+
 require_once BES_DIR . 'bootstrap/debug-log.php';
 bes_bootstrap_register_admin_error_handlers();
 
@@ -57,9 +63,6 @@ require_once BES_DIR . 'bootstrap/legacy-data-paths.php';
 
 if (file_exists(BES_DIR . 'includes/filters.php')) {
     require_once BES_DIR . 'includes/filters.php';
-}
-if (file_exists(BES_DIR . 'includes/hosting-compatibility.php')) {
-    require_once BES_DIR . 'includes/hosting-compatibility.php';
 }
 
 /**
