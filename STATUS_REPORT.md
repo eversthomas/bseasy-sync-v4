@@ -316,3 +316,33 @@ Fehlende Einträge ergänzen: `admin/views/ui-main.php`, `ui-felder.php`, `ui-ka
 - [x] `grep` File-IO-`@`: **7 Treffer** (siehe Liste oben)
 - [x] `php -l` auf alle geänderten Dateien — ohne Syntaxfehler
 - [ ] Frontend-Shortcode, Admin-Tabs, Cron — manuell (analog Task 1, vor Push)
+
+---
+
+## Admin-500-Vorfall (Stand: 2026-05-24)
+
+### Was passierte
+Task 2 / Commit b9196b7 ersetzte `@wp_mkdir_p` + `@file_put_contents` in
+`bes_write_debug_log()` durch `bes_ensure_writable_directory()` und
+`bes_safe_file_put_contents()`. Damit wurde eine versteckte Load-Order-
+Abhängigkeit aktiv: Der Admin-Error-Handler ruft das Logging
+unmittelbar nach Registrierung auf, aber `hosting-compatibility.php`
+wurde erst danach geladen → Fatal in jedem Admin-Request.
+
+### Wie es entdeckt wurde
+Verifikation von Task 2 mit echtem authentifiziertem curl
+(`wordpress_logged_in_*`-Cookie) — Markup-Tests aus Task 1 hätten
+es nicht aufgedeckt.
+
+### Wie es behoben wurde
+1. `hosting-compatibility.php` in `load.php` vor `debug-log.php` verschoben
+2. Defense-in-Depth in `bes_write_debug_log()`: `function_exists()`-Prüfung
+   + `error_log()`-Fallback bei nicht geladenem Hosting
+
+### Was wir gelernt haben
+- `@`-Suppressions können latente Bootstrap-Bugs verstecken.
+  Ihre Eliminierung deckt versteckte Abhängigkeiten auf — das ist
+  ein Feature, kein Bug der Suppression-Eliminierung.
+- Verifikation per HTML-Markup reicht nicht. Admin-Tests brauchen
+  echten authentifizierten HTTP-Request mit Response-Status-Check.
+- Logging-Code muss crash-sicher sein, auch gegen Load-Order-Fehler.

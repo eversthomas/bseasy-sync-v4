@@ -27,6 +27,17 @@ Dieses Dokument listet alle Module des Plugins mit ihren Dateien und Funktionen.
 
 **Stand Task 2 (2026-05-24):** 7 verbleibende `@`-Suppressions, alle Kategorie C (kommentiert).
 
+### Verifikations-Standard für Admin-Bereich
+
+- Admin-Tests müssen einen authentifizierten HTTP-Request gegen `wp-admin/admin.php?page=...` durchführen (curl mit `wordpress_logged_in_*`-Cookie)
+- Erfolgskriterium: HTTP 200, nicht „Markup vorhanden“
+- WP-CLI eval und synthetischer `WP_ADMIN`-Bootstrap reichen nicht (Capability-Check + Page-Render werden so umgangen)
+
+### Bootstrap-Load-Order
+
+- Reihenfolge in `bootstrap/load.php`: Infrastruktur (`constants`, `error-handler`, `cache-utils`, `hosting-compatibility`) vor allem, was diese Infrastruktur nutzt (`debug-log`, Handler-Registrierung, Bootstrap-Seiteneffekte)
+- Logging-Code (`bes_write_debug_log` und Wrapper) muss crash-sicher sein gegen Load-Order-Fehler: `function_exists()`-Prüfung + sauberer Fallback ohne `@`-Suppression
+
 ---
 
 ## Inhaltsverzeichnis
