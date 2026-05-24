@@ -118,7 +118,7 @@ function bes_sync_reset(): void
 
     $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
     if (file_exists($status_file)) {
-        @unlink($status_file);
+        @unlink($status_file); // Legitim: Sync-Reset-Cleanup nach file_exists(), Fehler irrelevant
     }
 
     delete_option(BES_V3_OPTION_PREFIX . 'current_part');

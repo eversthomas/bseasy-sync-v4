@@ -291,7 +291,7 @@ function bes_ensure_writable_directory(string $path, int $permissions = 0755): b
     // Prüfe ob beschreibbar
     if (!is_writable($path)) {
         // Versuche Berechtigungen zu setzen
-        @chmod($path, $permissions);
+        @chmod($path, $permissions); // Legitim: Best-Effort in bes_ensure_writable_directory, danach is_writable()-Check
         
         // Prüfe erneut
         if (!is_writable($path)) {
@@ -321,7 +321,7 @@ function bes_ensure_writable_file(string $file, int $permissions = 0644): bool
     
     // Wenn Datei existiert, prüfe Berechtigungen
     if (file_exists($file) && !is_writable($file)) {
-        @chmod($file, $permissions);
+        @chmod($file, $permissions); // Legitim: Best-Effort in bes_ensure_writable_file, danach is_writable()-Check
         
         if (!is_writable($file)) {
             bes_debug_log("Datei nicht beschreibbar: $file", 'ERROR', 'hosting');
@@ -351,7 +351,7 @@ function bes_safe_file_put_contents(string $file, string $data, int $flags = 0, 
     // Versuche zu schreiben mit Retry-Logik
     $attempt = 0;
     while ($attempt < $retries) {
-        $result = @file_put_contents($file, $data, $flags);
+        $result = @file_put_contents($file, $data, $flags); // Legitim: Retry-Schleife in bes_safe_file_put_contents, finales Log bei Fehler
         
         if ($result !== false) {
             return $result;

@@ -83,7 +83,7 @@ function bes_safe_file_get_contents(string $file_path, string $allowed_dir): ?st
     }
 
     // 5. Jetzt sicher lesen
-    $content = @file_get_contents($real_path);
+    $content = @file_get_contents($real_path); // Legitim: in bes_safe_file_get_contents nach Path-/is_file-Prüfung, Log bei false
     if ($content === false) {
         if (function_exists('bes_debug_log')) {
             bes_debug_log("Fehler beim Lesen der Datei: $real_path", 'ERROR', 'file_security');
