@@ -14,6 +14,19 @@ Dieses Dokument listet alle Module des Plugins mit ihren Dateien und Funktionen.
 - `README.md` (Setup/Shortcodes, High-Level Überblick)
 - `dev/ROADMAP.md` (interne Roadmap, nicht produktionsrelevant)
 
+## Coding-Regeln
+
+### Keine neuen `@`-Error-Suppressions
+
+- Statt `@file_get_contents` / `@file_put_contents` / etc.: explizite Prüfung + `bes_debug_log()`
+- Für File-IO mit Berechtigungs-Checks: `bes_safe_file_put_contents()` bzw. `bes_ensure_writable_directory()`
+- Für lesende Zugriffe mit Path-Traversal-Schutz: `bes_safe_file_get_contents($path, $allowed_dir)`
+- Timeout/Memory: `bes_safe_set_time_limit()` / `bes_safe_increase_memory()` — keine direkten `@set_time_limit`-Fallbacks
+- Falls ein Use-Case keine passende `bes_safe_*`-Funktion findet: Wrapper-Lücke melden statt `@`-Workaround
+- Legitime `@`-Verwendungen (z. B. Tmp-Cleanup-`unlink`, Best-Effort-`chmod` in Safe-Wrappern) brauchen einen **Inline-Kommentar** mit Begründung
+
+**Stand Task 2 (2026-05-24):** 7 verbleibende `@`-Suppressions, alle Kategorie C (kommentiert).
+
 ---
 
 ## Inhaltsverzeichnis

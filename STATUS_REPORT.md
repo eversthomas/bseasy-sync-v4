@@ -102,7 +102,7 @@ bseasy-sync-v4/
 | # | Punkt | Status | Beleg |
 |---|-------|--------|-------|
 | 1 | `BES_PATH` entfernt | ✅ erledigt | `grep -rn "BES_PATH"` → kein Treffer |
-| 2 | `@`-Error-Suppression (28 Stellen) | 🟡 teilweise | **36 Stellen** (gestiegen) in 11 Dateien — Übersicht s. u. |
+| 2 | `@`-Error-Suppression (28 Stellen) | ✅ erledigt (Task 2) | **7 verbleibende** Stellen (alle Kategorie C, kommentiert) — war 36 vor Task 2 |
 | 3 | Silent Base64-Fallback WARN-Logging | ✅ erledigt | `token-crypto.php:32,39,49,58,67` — alle 5 Fallback-Zweige loggen `bes_debug_log(..., 'WARN', 'security')` |
 | 4 | PRG-Pattern im Admin-Handler | ✅ erledigt | `admin-page.php:120-121` — `set_transient('settings_errors', ...)` + `wp_safe_redirect(...)` |
 | 5 | `calendar-handler.php` Lade-Reihenfolge | ✅ erledigt | `load.php:96` `is_admin()` Block öffnet, `load.php:106-107` calendar-handler darin |
@@ -144,19 +144,16 @@ Keine direkten `$_GET`/`$_POST` ohne Sanitize/Nonce gefunden.
 **H1 — Admin-Module werden auf jedem Frontend-Request geladen** ✅ *behoben in Task 1 (2026-05-24)*  
 `bootstrap/load.php` lädt Admin-Module nur noch unter `if (is_admin())` (Felder, Cache/Debug-AJAX, Assets). Sync/Cron bleiben im Block `is_admin() || wp_doing_cron()`.
 
-**H2 — `@`-Suppression gewachsen (36 statt 28)**  
-Kein Abbau der Suppressions seit letzter Review — stattdessen Anstieg durch neue Dateien in `sync/v3/` und `sync/runtime/`. Besonders `sync/runtime/cron-v3.php:43,107,298` — drei separate `@set_time_limit(0)` ohne Log.
+**H2 — `@`-Suppression gewachsen (36 statt 28)** ✅ *behoben in Task 2 (2026-05-24)*  
+38 Stellen analysiert; 31 entfernt/refaktoriert; **7 legitim** (Tmp-Cleanup, Safe-Wrapper-Kern) mit Inline-Kommentar.
 
 **H3 — `ui-sync.php` enthält ~900 Zeilen JavaScript**  
 Partials wurden extrahiert (HTML), aber das gesamte JS (Explorer-Polling, Sync-Steuerung, Feldauswahl) ist als `<script>`-Block in `ui-sync.php` eingebettet. Das macht Browser-Caching, Code-Review und Linting unmöglich.
 
 ### Mittel
 
-**M1 — Silent Failure in `frontend/ajax/ajax-endpoints.php:96`**  
-```php
-$config_raw = @file_get_contents($config_file);
-```
-Kein `bes_debug_log()`-Aufruf nach dieser Zeile. Wenn `fields-config.json` fehlt oder unlesbar ist, wird das Filter-Ergebnis still leer — der Nutzer sieht kein Feedback, der Admin kein Log.
+**M1 — Silent Failure in `frontend/ajax/ajax-endpoints.php:96`** ✅ *behoben in Task 2 (2026-05-24)*  
+Fallback mit `@file_get_contents` entfernt; nur noch `bes_safe_file_get_contents()`.
 
 **M2 — `sync/v3-consent-audit.php` im falschen Verzeichnis** ✅ *behoben in Task 1 (2026-05-24)*  
 Implementierung liegt in `sync/consent/consent-audit.php`; Stub `sync/v3-consent-audit.php` delegiert dorthin. `sync-service.php` lädt den neuen Pfad.
@@ -287,3 +284,35 @@ Fehlende Einträge ergänzen: `admin/views/ui-main.php`, `ui-felder.php`, `ui-ka
 - `bes_analyze_field_intelligence()` in `admin/fields/fields-handler.php:770` wird per AJAX aufgerufen, ist aber nirgends definiert → toter Code-Pfad, Field-Intelligence-Tab
 - `bes_load_json_versioned()` in `bootstrap/legacy-data-paths.php` wird nirgends aufgerufen → toter Code-Pfad
 - Leaflet **1.9.4** / MarkerCluster **1.5.1** als Baseline dokumentiert (Stand Mai 2026: aktuelle Versionen prüfen vor Update)
+
+---
+
+## Task 2 erledigt (Stand: 2026-05-24)
+
+### Änderungen
+- 38 `@`-Suppressions analysiert und klassifiziert (`cursor-task2-analyse.md`)
+- 14 Anti-Pattern-Stellen (Kategorie A): explizite Prüfung + `bes_debug_log`
+- 17 Stellen (Kategorie B): konsequent auf `bes_safe_*`-Wrapper umgestellt
+- 7 Stellen (Kategorie C): bleiben mit Inline-Kommentar (Legitim)
+- M1-Silent-Failure in `frontend/ajax/ajax-endpoints.php` behoben
+- `@set_time_limit`-Fallbacks: tote `else`-Zweige entfernt (4 Stellen)
+
+### Aktualisierter Stand offene Checkliste
+- Punkt 2 (@-Suppressions reduzieren): ✅ von 28→36→**7** (alle verbleibenden begründet)
+
+### Verbleibende Suppressions (7, alle Kategorie C)
+
+| # | Datei:Zeile | Funktion | Begründung |
+|---|-------------|----------|------------|
+| 1 | `admin/fields/fields-handler.php:122` | unlink | Tmp-Cleanup nach fehlgeschlagenem Write |
+| 2 | `admin/fields/fields-handler.php:136` | unlink | Tmp-Cleanup nach fehlgeschlagenem rename |
+| 3 | `sync/sync-service.php:121` | unlink | Sync-Reset nach `file_exists()` |
+| 4 | `includes/infra/hosting/hosting-compatibility.php:294` | chmod | Best-Effort in `bes_ensure_writable_directory` |
+| 5 | `includes/infra/hosting/hosting-compatibility.php:324` | chmod | Best-Effort in `bes_ensure_writable_file` |
+| 6 | `includes/infra/hosting/hosting-compatibility.php:354` | file_put_contents | Retry in `bes_safe_file_put_contents` |
+| 7 | `includes/infra/security/safe-io.php:86` | file_get_contents | Nach Path-Check in `bes_safe_file_get_contents` |
+
+### Verifikation (automatisiert)
+- [x] `grep` File-IO-`@`: **7 Treffer** (siehe Liste oben)
+- [x] `php -l` auf alle geänderten Dateien — ohne Syntaxfehler
+- [ ] Frontend-Shortcode, Admin-Tabs, Cron — manuell (analog Task 1, vor Push)
