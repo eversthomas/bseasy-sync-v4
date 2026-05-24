@@ -18,6 +18,22 @@ if (!defined("BES_DATA_V3")) {
 // ============================================================
 
 /**
+ * Schreibt eine Zeile in eine V3-Log-Datei (sync-v3.log / debug-v3.log).
+ *
+ * @param string $log_file Absoluter Pfad zur Log-Datei
+ * @param string $log_entry Zeile inkl. Newline
+ * @return bool Erfolg
+ */
+function bseasy_v3_append_log_line(string $log_file, string $log_entry): bool {
+    $written = bes_safe_file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    if ($written === false) {
+        bes_debug_log('V3 Log-Schreiben fehlgeschlagen: ' . $log_file, 'ERROR', 'v3-log');
+        return false;
+    }
+    return true;
+}
+
+/**
  * V3-spezifisches Logging (schreibt in sync-v3.log)
  * 
  * @param string $message Log-Nachricht
@@ -44,7 +60,7 @@ function bseasy_v3_log(string $message, string $level = 'INFO', string $context 
     $timestamp = date('Y-m-d H:i:s');
     $log_entry = "[{$timestamp}] [{$level}] [{$context}] {$message}\n";
     
-    return @file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX) !== false;
+    return bseasy_v3_append_log_line($log_file, $log_entry);
 }
 
 /**
@@ -78,5 +94,5 @@ function bseasy_v3_debug_log(string $message, string $level = 'DEBUG', string $c
     $timestamp = date('Y-m-d H:i:s');
     $log_entry = "[{$timestamp}] [{$level}] [{$context}] {$message}\n";
     
-    return @file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX) !== false;
+    return bseasy_v3_append_log_line($log_file, $log_entry);
 }

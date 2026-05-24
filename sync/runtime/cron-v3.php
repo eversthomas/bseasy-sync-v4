@@ -37,11 +37,7 @@ add_action('bes_run_explorer_v3', function ($sample_size = null, $fresh_from_api
     $sample_size = (int) $sample_size;
     try {
         // Timeout-Setting
-        if (function_exists('bes_safe_set_time_limit')) {
-            bes_safe_set_time_limit(0);
-        } else {
-            @set_time_limit(0);
-        }
+        bes_safe_set_time_limit(0);
         
         if (function_exists('bes_safe_increase_memory')) {
             bes_safe_increase_memory('512M');
@@ -101,11 +97,7 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
         $total_members = (int) get_option(BES_V3_OPTION_PREFIX . 'total_members', 0);
         
         // Timeout-Setting
-        if (function_exists('bes_safe_set_time_limit')) {
-            bes_safe_set_time_limit(0);
-        } else {
-            @set_time_limit(0);
-        }
+        bes_safe_set_time_limit(0);
         
         // Speichere current_part in Option
         update_option(BES_V3_OPTION_PREFIX . 'current_part', $part);
@@ -292,11 +284,7 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
 add_action('bes_run_audit_consent_v3', function () {
     try {
         // Timeout-Setting
-        if (function_exists('bes_safe_set_time_limit')) {
-            bes_safe_set_time_limit(0);
-        } else {
-            @set_time_limit(0);
-        }
+        bes_safe_set_time_limit(0);
         
         if (function_exists('bes_safe_increase_memory')) {
             bes_safe_increase_memory('512M');

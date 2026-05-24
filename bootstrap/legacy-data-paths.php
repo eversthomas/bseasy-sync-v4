@@ -40,8 +40,11 @@ function bes_load_json_versioned($file, $version = 'v2') {
         return bes_load_json_from_path($path);
     }
 
-    $content = @file_get_contents($path);
+    $content = file_get_contents($path);
     if ($content === false) {
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('Legacy JSON nicht lesbar: ' . $path, 'WARN', 'legacy');
+        }
         return null;
     }
 

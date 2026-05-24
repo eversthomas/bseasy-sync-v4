@@ -111,23 +111,29 @@ function bes_save_json(string $file, array $data): bool {
     $tmp_file = $path . '.tmp';
     
     // Schreibe in temporäre Datei
-    $result = @file_put_contents($tmp_file, $json_content, LOCK_EX);
-    
+    $result = file_put_contents($tmp_file, $json_content, LOCK_EX);
+
     if ($result === false) {
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('file_put_contents fehlgeschlagen: ' . $tmp_file, 'ERROR', 'fields');
+        }
         // Cleanup: Lösche tmp-Datei falls vorhanden
         if (file_exists($tmp_file)) {
-            @unlink($tmp_file);
+            @unlink($tmp_file); // Legitim: Tmp-Cleanup nach fehlgeschlagenem Write, Existenz egal
         }
         return false;
     }
-    
+
     // Atomisches Umbenennen
-    $rename_result = @rename($tmp_file, $path);
-    
+    $rename_result = rename($tmp_file, $path);
+
     if ($rename_result === false) {
+        if (function_exists('bes_debug_log')) {
+            bes_debug_log('rename fehlgeschlagen: ' . $tmp_file . ' -> ' . $path, 'ERROR', 'fields');
+        }
         // Cleanup: Lösche tmp-Datei falls rename fehlschlug
         if (file_exists($tmp_file)) {
-            @unlink($tmp_file);
+            @unlink($tmp_file); // Legitim: Tmp-Cleanup nach fehlgeschlagenem rename
         }
         return false;
     }

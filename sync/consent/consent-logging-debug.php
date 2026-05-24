@@ -66,7 +66,10 @@ function bes_consent_log(string $msg, string $level = 'INFO'): void
     
     static $initialized = false;
     if (!$initialized) {
-        @file_put_contents($logfile, "=== New Consent Sync Run: " . date('c') . " ===\n", FILE_APPEND | LOCK_EX);
+        $init_line = "=== New Consent Sync Run: " . date('c') . " ===\n";
+        if (bes_safe_file_put_contents($logfile, $init_line, FILE_APPEND | LOCK_EX) === false) {
+            bes_debug_log('Consent-Log Init fehlgeschlagen: ' . $logfile, 'ERROR', 'consent-log');
+        }
         $initialized = true;
     }
     $timestamp = date('Y-m-d H:i:s');

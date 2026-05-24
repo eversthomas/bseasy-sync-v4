@@ -172,8 +172,11 @@ function bes_safe_set_time_limit(int $seconds = 0): bool
     }
     
     // Versuche Timeout zu setzen
-    @set_time_limit($seconds);
-    
+    if (set_time_limit($seconds) === false) {
+        bes_debug_log("set_time_limit($seconds) fehlgeschlagen (Hosting-Einschränkung)", 'WARN', 'hosting');
+        return false;
+    }
+
     return true;
 }
 
@@ -204,13 +207,23 @@ function bes_safe_increase_memory(string $required_limit = '256M'): bool
     $target_string = bes_bytes_to_string($target_limit);
     
     // Versuche Limit zu erhöhen
-    @ini_set('memory_limit', $target_string);
-    
+    ini_set('memory_limit', $target_string);
+
     // Prüfe ob es funktioniert hat
     $new_limit = ini_get('memory_limit');
     $new_bytes = bes_convert_to_bytes($new_limit);
-    
-    return $new_bytes >= $target_limit;
+
+    if ($new_bytes >= $target_limit) {
+        return true;
+    }
+
+    bes_debug_log(
+        "memory_limit konnte nicht auf $target_string erhöht werden (aktuell: $new_limit)",
+        'WARN',
+        'hosting'
+    );
+
+    return false;
 }
 
 /**

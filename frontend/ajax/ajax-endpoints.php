@@ -88,14 +88,8 @@ function bes_ajax_filter_members() {
     $allowed_field_ids = [];
     $config_file = BES_DATA . 'fields-config.json';
     if (file_exists($config_file)) {
-        // ✅ Sichere File-Operation mit Pfad-Validierung
-        if (function_exists('bes_safe_file_get_contents')) {
-            $config_raw = bes_safe_file_get_contents($config_file, BES_DATA);
-        } else {
-            // Fallback für alte Versionen
-            $config_raw = @file_get_contents($config_file);
-        }
-        if ($config_raw !== false) {
+        $config_raw = bes_safe_file_get_contents($config_file, BES_DATA);
+        if ($config_raw !== null) {
             $config_data = json_decode($config_raw, true);
             if (is_array($config_data)) {
                 foreach ($config_data as $field) {

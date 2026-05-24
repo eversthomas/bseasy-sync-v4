@@ -126,11 +126,7 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         ];
         
         // Timeout-Setting
-        if (function_exists('bes_safe_set_time_limit')) {
-            bes_safe_set_time_limit(0);
-        } else {
-            @set_time_limit(0);
-        }
+        bes_safe_set_time_limit(0);
         
         if (function_exists('bes_safe_increase_memory')) {
             bes_safe_increase_memory('256M');
