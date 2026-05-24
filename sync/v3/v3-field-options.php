@@ -18,6 +18,30 @@ if (!defined("BES_DATA_V3")) {
 // ============================================================
 
 /**
+ * Stellt sicher, dass das V3-Cache-Verzeichnis existiert und index.php enthält.
+ *
+ * @return bool Erfolg
+ */
+function bseasy_v3_ensure_cache_dir(): bool {
+    if (!defined('BES_DATA_V3') || empty(BES_DATA_V3)) {
+        return false;
+    }
+
+    $cache_dir = BES_DATA_V3 . 'cache/';
+    if (!bes_ensure_writable_directory($cache_dir)) {
+        bes_debug_log('V3 Cache-Verzeichnis nicht beschreibbar: ' . $cache_dir, 'ERROR', 'v3-field-options');
+        return false;
+    }
+
+    $index_file = $cache_dir . 'index.php';
+    if (!file_exists($index_file)) {
+        bes_safe_file_put_contents($index_file, "<?php\n// Silence is golden.\n");
+    }
+
+    return true;
+}
+
+/**
  * Extrahiert Option-ID aus URL oder numerischem Wert
  * 
  * @param mixed $url_or_id URL oder ID
@@ -86,24 +110,11 @@ function bseasy_v3_set_cached_option_label(int $option_id, string $label): bool 
         return false;
     }
     
-    $cache_dir = BES_DATA_V3 . 'cache/';
-    
-    // Stelle sicher, dass Cache-Verzeichnis existiert
-    if (!file_exists($cache_dir)) {
-        if (function_exists('wp_mkdir_p')) {
-            wp_mkdir_p($cache_dir);
-            @chmod($cache_dir, 0755);
-        } else {
-            @mkdir($cache_dir, 0755, true);
-        }
-        
-        // Schutz-Datei
-        $index_file = $cache_dir . 'index.php';
-        if (!file_exists($index_file)) {
-            @file_put_contents($index_file, "<?php\n// Silence is golden.\n");
-        }
+    if (!bseasy_v3_ensure_cache_dir()) {
+        return false;
     }
     
+    $cache_dir = BES_DATA_V3 . 'cache/';
     $cache_file = $cache_dir . "option_{$option_id}.json";
     
     $data = [
@@ -196,24 +207,11 @@ function bseasy_v3_get_cf_select_options_map(int $cf_id, string &$token, ?string
         return [];
     }
     
-    $cache_dir = BES_DATA_V3 . 'cache/';
-    
-    // Stelle sicher, dass Cache-Verzeichnis existiert
-    if (!file_exists($cache_dir)) {
-        if (function_exists('wp_mkdir_p')) {
-            wp_mkdir_p($cache_dir);
-            @chmod($cache_dir, 0755);
-        } else {
-            @mkdir($cache_dir, 0755, true);
-        }
-        
-        // Schutz-Datei
-        $index_file = $cache_dir . 'index.php';
-        if (!file_exists($index_file)) {
-            @file_put_contents($index_file, "<?php\n// Silence is golden.\n");
-        }
+    if (!bseasy_v3_ensure_cache_dir()) {
+        return [];
     }
     
+    $cache_dir = BES_DATA_V3 . 'cache/';
     $cache_file = $cache_dir . "cf_select_options_{$cf_id}.json";
     
     // 1) Cache lesen

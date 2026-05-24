@@ -39,18 +39,7 @@ function bes_write_debug_log($message, $level = 'INFO', $context = 'admin') {
 
     $debug_dir = trailingslashit($plugin_dir) . 'debug/';
 
-    // Versuche Verzeichnis zu erstellen mit sicheren Berechtigungen
-    if (!file_exists($debug_dir)) {
-        if (function_exists('wp_mkdir_p')) {
-            @wp_mkdir_p($debug_dir);
-        } else {
-            @mkdir($debug_dir, 0755, true);
-        }
-        @chmod($debug_dir, 0755);
-    }
-
-    // Prüfe ob Verzeichnis jetzt existiert und beschreibbar ist
-    if (!file_exists($debug_dir) || !is_writable($debug_dir)) {
+    if (!bes_ensure_writable_directory($debug_dir)) {
         error_log("BES Debug: Verzeichnis nicht beschreibbar: " . $debug_dir);
         return false;
     }
@@ -65,7 +54,7 @@ function bes_write_debug_log($message, $level = 'INFO', $context = 'admin') {
     $timestamp = date('Y-m-d H:i:s');
     $log_entry = "[{$timestamp}] [{$level}] [{$context}] {$message}\n";
 
-    $result = @file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    $result = bes_safe_file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
 
     if ($result === false) {
         error_log("BES Debug: Fehler beim Schreiben in: " . $log_file);

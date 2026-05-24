@@ -53,9 +53,9 @@ add_action('wp_ajax_bes_debug_log', function () {
     
     // Debug-Verzeichnis erstellen falls nicht vorhanden
     $debug_dir = BES_DIR . 'debug/';
-    if (!file_exists($debug_dir)) {
-        wp_mkdir_p($debug_dir);
-        @chmod($debug_dir, 0755);
+    if (!bes_ensure_writable_directory($debug_dir)) {
+        wp_send_json_error(['error' => esc_html__('Debug-Verzeichnis nicht beschreibbar.', BES_TEXT_DOMAIN)]);
+        return;
     }
     
     // Debug-Log-Datei
@@ -68,7 +68,7 @@ add_action('wp_ajax_bes_debug_log', function () {
     $log_entry = "[{$timestamp}] [{$level}] [{$context}] {$message}\n";
     
     // In Datei schreiben (append mode)
-    $result = @file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    $result = bes_safe_file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
     
     if ($result !== false) {
         wp_send_json_success(['message' => 'Debug-Log geschrieben', 'file' => $log_file]);

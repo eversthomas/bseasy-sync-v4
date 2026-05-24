@@ -48,13 +48,9 @@ function bes_consent_log(string $msg, string $level = 'INFO'): void
     }
     
     // Stelle sicher dass Verzeichnis existiert mit sicheren Berechtigungen
-    if (!is_dir($log_dir)) {
-        if (function_exists('wp_mkdir_p')) {
-            wp_mkdir_p($log_dir);
-        } else {
-            @mkdir($log_dir, 0755, true);
-        }
-        @chmod($log_dir, 0755);
+    if (!is_dir($log_dir) && !bes_ensure_writable_directory($log_dir)) {
+        error_log("BES Consent Log: Verzeichnis nicht beschreibbar: " . $log_dir);
+        return;
     }
     
     // Validiere Dateiname (kein Path-Traversal)

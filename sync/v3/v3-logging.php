@@ -45,15 +45,10 @@ function bseasy_v3_log(string $message, string $level = 'INFO', string $context 
     if (!defined('BES_DATA_V3') || empty(BES_DATA_V3)) {
         return false;
     }
-    
-    // Stelle sicher, dass Verzeichnis existiert
-    if (!file_exists(BES_DATA_V3)) {
-        if (function_exists('wp_mkdir_p')) {
-            wp_mkdir_p(BES_DATA_V3);
-            @chmod(BES_DATA_V3, 0755);
-        } else {
-            @mkdir(BES_DATA_V3, 0755, true);
-        }
+
+    if (!bes_ensure_writable_directory(BES_DATA_V3)) {
+        bes_debug_log('V3 Log-Verzeichnis nicht beschreibbar: ' . BES_DATA_V3, 'ERROR', 'v3-log');
+        return false;
     }
     
     $log_file = BES_DATA_V3 . BES_V3_LOG_FILE;
@@ -79,15 +74,10 @@ function bseasy_v3_debug_log(string $message, string $level = 'DEBUG', string $c
     if (!defined('BES_DATA_V3') || empty(BES_DATA_V3)) {
         return false;
     }
-    
-    // Stelle sicher, dass Verzeichnis existiert
-    if (!file_exists(BES_DATA_V3)) {
-        if (function_exists('wp_mkdir_p')) {
-            wp_mkdir_p(BES_DATA_V3);
-            @chmod(BES_DATA_V3, 0755);
-        } else {
-            @mkdir(BES_DATA_V3, 0755, true);
-        }
+
+    if (!bes_ensure_writable_directory(BES_DATA_V3)) {
+        bes_debug_log('V3 Debug-Log-Verzeichnis nicht beschreibbar: ' . BES_DATA_V3, 'ERROR', 'v3-log');
+        return false;
     }
     
     $log_file = BES_DATA_V3 . BES_V3_DEBUG_LOG_FILE;
