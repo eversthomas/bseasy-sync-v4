@@ -23,6 +23,15 @@ function bes_write_debug_log($message, $level = 'INFO', $context = 'admin') {
         return false;
     }
 
+    // Defense-in-Depth: Logging-Code darf nie crashen, auch nicht bei
+    // Load-Order-Fehlern. Fallback nutzt PHPs error_log() statt File-IO.
+    // EARLY-Marker signalisiert, dass die Funktion vor hosting-compatibility
+    // aufgerufen wurde — Hinweis auf Bootstrap-Problem.
+    if (!function_exists('bes_ensure_writable_directory')) {
+        error_log('[BES ' . $level . ' EARLY] ' . $message);
+        return false;
+    }
+
     // Validiere BES_DIR Pfad
     $plugin_dir = realpath(BES_DIR);
     if ($plugin_dir === false) {
