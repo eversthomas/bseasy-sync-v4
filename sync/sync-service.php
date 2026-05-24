@@ -42,8 +42,8 @@ require_once __DIR__ . '/api-explorer-v3.php';
 require_once __DIR__ . '/api-core-consent-v3.php';
 
 // Consent-Audit
-if (file_exists(__DIR__ . '/v3-consent-audit.php')) {
-    require_once __DIR__ . '/v3-consent-audit.php';
+if (file_exists(__DIR__ . '/consent/consent-audit.php')) {
+    require_once __DIR__ . '/consent/consent-audit.php';
 }
 
 // ============================================================
