@@ -144,43 +144,36 @@ if (file_exists(BES_DIR . 'frontend/calendar-render.php')) {
 
 /**
  * ------------------------------------------------------------
- *  🧩 ADMIN: Seite, Menü, Assets
+ *  🧩 ADMIN: Seite, Menü, Felder, AJAX, Assets (nur WP-Admin)
+ *  Cron-relevante Module (sync/, ajax-v3, calendar-handler) liegen
+ *  im Block oben (is_admin() || wp_doing_cron()).
  * ------------------------------------------------------------
  */
-require_once BES_DIR . 'bootstrap/admin-page.php';
-require_once BES_DIR . 'bootstrap/admin-menu.php';
+if (is_admin()) {
+    require_once BES_DIR . 'bootstrap/admin-page.php';
+    require_once BES_DIR . 'bootstrap/admin-menu.php';
 
-/**
- * ------------------------------------------------------------
- *  🧠 FELDERVERWALTUNG (CustomField-Konfiguration)
- * ------------------------------------------------------------
- */
-if (file_exists(BES_DIR . 'admin/fields/fields-handler.php')) {
-    require_once BES_DIR . 'admin/fields/fields-handler.php';
-}
-if (file_exists(BES_DIR . 'admin/fields/includes/field-label-generator.php')) {
-    require_once BES_DIR . 'admin/fields/includes/field-label-generator.php';
-}
-if (file_exists(BES_DIR . 'admin/fields/includes/fields-template.php')) {
-    require_once BES_DIR . 'admin/fields/includes/fields-template.php';
-}
-// Hinweis: design-settings.php wird bereits weiter oben als gemeinsame Ressource geladen
-// (includes/design/design-settings.php). Der Stub admin/fields/includes/design-settings.php
-// ist nur noch für direkten Aufruf aus altem Code vorhanden.
+    if (file_exists(BES_DIR . 'admin/fields/fields-handler.php')) {
+        require_once BES_DIR . 'admin/fields/fields-handler.php';
+    }
+    if (file_exists(BES_DIR . 'admin/fields/includes/field-label-generator.php')) {
+        require_once BES_DIR . 'admin/fields/includes/field-label-generator.php';
+    }
+    if (file_exists(BES_DIR . 'admin/fields/includes/fields-template.php')) {
+        require_once BES_DIR . 'admin/fields/includes/fields-template.php';
+    }
+    // design-settings.php wird weiter oben als gemeinsame Ressource geladen
+    // (includes/design/design-settings.php). Stub: admin/fields/includes/design-settings.php
 
-/**
- * ------------------------------------------------------------
- *  🔁 AJAX-HANDLER: Cache & Debug
- * ------------------------------------------------------------
- */
-if (file_exists(BES_DIR . 'admin/ajax/ajax-cache.php')) {
-    require_once BES_DIR . 'admin/ajax/ajax-cache.php';
-}
-if (file_exists(BES_DIR . 'admin/ajax/ajax-debug.php')) {
-    require_once BES_DIR . 'admin/ajax/ajax-debug.php';
-}
+    if (file_exists(BES_DIR . 'admin/ajax/ajax-cache.php')) {
+        require_once BES_DIR . 'admin/ajax/ajax-cache.php';
+    }
+    if (file_exists(BES_DIR . 'admin/ajax/ajax-debug.php')) {
+        require_once BES_DIR . 'admin/ajax/ajax-debug.php';
+    }
 
-require_once BES_DIR . 'bootstrap/admin-assets.php';
+    require_once BES_DIR . 'bootstrap/admin-assets.php';
+}
 
 /**
  * ------------------------------------------------------------
