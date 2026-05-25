@@ -134,6 +134,83 @@ function bes_bootstrap_admin_enqueue_scripts($hook) {
         'nonce'    => wp_create_nonce('bes_admin_nonce'),
     ]);
 
+    /**
+     * Sync-Tab JavaScript (ausgelagert aus admin/views/ui-sync.php)
+     */
+    if (!defined('BES_V3_OPTION_PREFIX')) {
+        if (defined('BES_DIR') && file_exists(BES_DIR . 'includes/constants-v3.php')) {
+            require_once BES_DIR . 'includes/constants-v3.php';
+        }
+    }
+
+    $bes_sync_data = [
+        'logoUrl'         => esc_url(BES_URL . 'img/logo-trans.800x0.webp'),
+        'explorerRunning' => (bool) get_option(
+            (defined('BES_V3_OPTION_PREFIX') ? BES_V3_OPTION_PREFIX : 'bes_v3_') . 'explorer_running',
+            false
+        ),
+        'requiredFields'  => defined('BES_V3_REQUIRED_FIELDS')
+            ? array_values(BES_V3_REQUIRED_FIELDS)
+            : ['member.id', 'member.membershipNumber', 'syncedAt'],
+    ];
+
+    wp_enqueue_script(
+        'bes-sync-shared',
+        BES_URL . 'admin/assets/sync/sync-shared.js',
+        ['jquery', 'bes-admin-script'],
+        BES_VERSION,
+        true
+    );
+    wp_localize_script('bes-sync-shared', 'besSyncData', $bes_sync_data);
+
+    wp_enqueue_script(
+        'bes-sync-notifications',
+        BES_URL . 'admin/assets/sync/sync-notifications.js',
+        ['bes-sync-shared'],
+        BES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'bes-sync-explorer',
+        BES_URL . 'admin/assets/sync/sync-explorer.js',
+        ['bes-sync-notifications'],
+        BES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'bes-sync-controller',
+        BES_URL . 'admin/assets/sync/sync-controller.js',
+        ['bes-sync-explorer'],
+        BES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'bes-sync-audit',
+        BES_URL . 'admin/assets/sync/sync-audit.js',
+        ['bes-sync-controller'],
+        BES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'bes-sync-field-selector',
+        BES_URL . 'admin/assets/sync/sync-field-selector.js',
+        ['bes-sync-audit'],
+        BES_VERSION,
+        true
+    );
+
+    wp_enqueue_script(
+        'bes-sync-init',
+        BES_URL . 'admin/assets/sync/sync-init.js',
+        ['bes-sync-field-selector'],
+        BES_VERSION,
+        true
+    );
+
     // ui-felder.js wurde entfernt - ui-felder-sidebar.js ist die aktuelle Version
     // Die alte Datei wurde gelöscht, da sie doppelte IDs verursachte und nicht mehr benötigt wird
 }
