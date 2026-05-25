@@ -755,35 +755,6 @@ add_action('wp_ajax_bes_export_config_template', function () {
 });
 
 /**
- * AJAX-Handler: Field Intelligence Dashboard
- * ============================================================ */
-
-add_action('wp_ajax_bes_get_field_intelligence', function () {
-    
-    check_ajax_referer('bes_felder_nonce', 'nonce');
-    
-    // Rate-Limiting (20 Requests pro Minute - Analyse ist teuer)
-    if (!function_exists('bes_check_rate_limit') || !bes_check_rate_limit('bes_get_field_intelligence', 20, 60)) {
-        wp_send_json_error(['message' => __('Zu viele Anfragen. Bitte warten Sie einen Moment.', 'besync')]);
-        return;
-    }
-    
-    if (!function_exists('bes_analyze_field_intelligence')) {
-        wp_send_json_error(['message' => __('Field Intelligence Funktion nicht verfügbar.', 'besync')]);
-        return;
-    }
-    
-    $intelligence = bes_analyze_field_intelligence();
-    
-    if (isset($intelligence['error'])) {
-        wp_send_json_error(['message' => $intelligence['error']]);
-        return;
-    }
-    
-    wp_send_json_success($intelligence);
-});
-
-/**
  * AJAX-Handler: Template-Konfiguration importieren
  * ============================================================ */
 

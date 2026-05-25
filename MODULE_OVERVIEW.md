@@ -29,9 +29,25 @@ Dieses Dokument listet alle Module des Plugins mit ihren Dateien und Funktionen.
 
 ### Verifikations-Standard für Admin-Bereich
 
-- Admin-Tests müssen einen authentifizierten HTTP-Request gegen `wp-admin/admin.php?page=...` durchführen (curl mit `wordpress_logged_in_*`-Cookie)
+- Admin-Tests müssen einen authentifizierten HTTP-Request gegen `wp-admin/admin.php?page=...` durchführen
+- curl-Aufruf braucht **beide** Cookies plus Redirect-Folge:
+  - `wordpress_logged_in_*` (User-Authentifizierung)
+  - `wordpress_*` (Auth-Cookie — ohne diesen Cookie oft HTTP 302 statt 200)
+  - `-L` (Redirects folgen, z. B. nach Login-Redirect)
 - Erfolgskriterium: HTTP 200, nicht „Markup vorhanden“
-- WP-CLI eval und synthetischer `WP_ADMIN`-Bootstrap reichen nicht (Capability-Check + Page-Render werden so umgangen)
+- WP-CLI `eval` und synthetischer `WP_ADMIN`-Bootstrap reichen nicht (Capability-Check + Page-Render werden so umgangen)
+
+Beispiel (Cookies per WP-CLI erzeugen, Seite `bseasy-sync`):
+
+```bash
+COOKIEHASH=$(wp eval 'echo COOKIEHASH;')
+LOGGED=$(wp eval 'echo wp_generate_auth_cookie(1, time()+3600, "logged_in");')
+AUTH=$(wp eval 'echo wp_generate_auth_cookie(1, time()+3600, "auth");')
+
+curl -sS -L -o /tmp/bes-admin.html -w '%{http_code}\n' \
+  -H "Cookie: wordpress_logged_in_${COOKIEHASH}=${LOGGED}; wordpress_${COOKIEHASH}=${AUTH}" \
+  "http://localhost/wordpress/wp-admin/admin.php?page=bseasy-sync"
+```
 
 ### Bootstrap-Load-Order
 
@@ -102,7 +118,6 @@ Implementiert das PRG-Pattern (Post/Redirect/Get): POST-Verarbeitung via `admin_
 | Funktion | Beschreibung |
 |----------|-------------|
 | `bes_get_data_dir()` | Gibt V2-Datenverzeichnis zurück (Fallback für alte Pfade) |
-| `bes_load_json_versioned(string $file)` | Lädt JSON aus V2-Verzeichnis (Abwärtskompatibilität) |
 
 ---
 

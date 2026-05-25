@@ -280,9 +280,13 @@ Fehlende Einträge ergänzen: `admin/views/ui-main.php`, `ui-felder.php`, `ui-ka
 - [ ] Karten-Rendering: Leaflet + Cluster — manuell prüfen
 - [ ] Länderfilter DE/AT/CH — manuell prüfen
 
-### Cleanup-Backlog (für späteren Task)
-- `bes_analyze_field_intelligence()` in `admin/fields/fields-handler.php:770` wird per AJAX aufgerufen, ist aber nirgends definiert → toter Code-Pfad, Field-Intelligence-Tab
-- `bes_load_json_versioned()` in `bootstrap/legacy-data-paths.php` wird nirgends aufgerufen → toter Code-Pfad
+### Cleanup-Backlog
+
+**Erledigt (2026-05-24):**
+- ✅ `bes_analyze_field_intelligence()` / `wp_ajax_bes_get_field_intelligence` — toter AJAX-Handler entfernt (`admin/fields/fields-handler.php`); Funktion war nie definiert, kein JS/UI-Bezug
+- ✅ `bes_load_json_versioned()` — ungenutzte Legacy-Funktion entfernt (`bootstrap/legacy-data-paths.php`); `bes_get_data_dir()` bleibt (wird von Sync/Explorer genutzt)
+
+**Offen:**
 - Leaflet **1.9.4** / MarkerCluster **1.5.1** als Baseline dokumentiert (Stand Mai 2026: aktuelle Versionen prüfen vor Update)
 
 ---
