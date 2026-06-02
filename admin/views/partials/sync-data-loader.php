@@ -81,6 +81,14 @@ if (!$catalog_exists) {
 // ── V3 Sync-Status ───────────────────────────────────────────────────────────
 $last_sync_time_v3       = get_option(BES_V3_OPTION_PREFIX . 'last_sync_time', false);
 $members_with_consent_v3 = get_option(BES_V3_OPTION_PREFIX . 'last_sync_members_with_consent', false);
+$last_sync_duration_v3   = (int) get_option(BES_V3_OPTION_PREFIX . 'last_sync_duration_sec', 0);
+if ($last_sync_duration_v3 <= 0 && function_exists('bseasy_v3_sync_ensure_duration_stored')) {
+    $stored_duration = bseasy_v3_sync_ensure_duration_stored();
+    $last_sync_duration_v3 = (int) ($stored_duration['duration_sec'] ?? 0);
+}
+$last_sync_duration_human_v3 = function_exists('bseasy_v3_format_duration')
+    ? bseasy_v3_format_duration($last_sync_duration_v3)
+    : '';
 
 // Explorer-Status-Datei (für laufenden Explorer-Fortschritt)
 $explorer_status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;

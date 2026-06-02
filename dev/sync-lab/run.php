@@ -28,7 +28,9 @@ try {
         'wp_loaded' => $auth['wp_loaded'],
     ];
 
-    $allIds = BesSyncLab_MemberIdResolver::resolve($client, $context, $opts, $config);
+    $resolved = BesSyncLab_MemberIdResolver::resolve($client, $context, $opts, $config);
+    $allIds = $resolved['ids'];
+    $context['server_filtered_ids'] = $resolved['server_filtered'];
     $offset = max(0, (int) $opts['offset']);
     $limit = max(1, (int) $opts['limit']);
     $memberIds = array_slice($allIds, $offset, $limit);
@@ -70,6 +72,7 @@ try {
             'limit' => $limit,
             'member_ids' => $memberIds,
             'wp_loaded' => $context['wp_loaded'],
+            'server_filtered_ids' => !empty($context['server_filtered_ids']),
         ],
         'member_count' => count($members),
         'metrics' => $metricsData,

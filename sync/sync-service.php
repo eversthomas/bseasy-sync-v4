@@ -124,6 +124,7 @@ function bes_sync_reset(): void
     delete_option(BES_V3_OPTION_PREFIX . 'current_part');
     delete_option(BES_V3_OPTION_PREFIX . 'total_members');
     delete_option(BES_V3_OPTION_PREFIX . 'last_error');
+    delete_option(BES_V3_OPTION_PREFIX . 'sync_started_at');
 }
 
 /**

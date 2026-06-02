@@ -67,8 +67,10 @@ final class BesSyncLab_OptimizedStrategy implements BesSyncLab_StrategyInterface
             $cfItems = $data['customFields'];
         }
 
-        if (!$this->context['sync_all'] && !BesSyncLab_StrategySupport::hasConsent($cfItems, (int) $this->context['consent_field_id'])) {
-            return null;
+        if (!$this->context['sync_all'] && empty($this->context['server_filtered_ids'])) {
+            if (!BesSyncLab_StrategySupport::hasConsent($cfItems, (int) $this->context['consent_field_id'])) {
+                return null;
+            }
         }
 
         $member = BesSyncLab_StrategySupport::buildMemberRecord($data, $cfItems, 'optimized');
@@ -86,6 +88,7 @@ final class BesSyncLab_OptimizedStrategy implements BesSyncLab_StrategyInterface
             'strategy' => 'optimized',
             'api_calls_estimate' => 1,
             'nested_query' => true,
+            'consent_from_server_filter' => !empty($this->context['server_filtered_ids']),
         ];
 
         return $member;

@@ -56,8 +56,9 @@ try {
     ];
 
     // Eine Sample-ID für E2
-    $sampleIds = BesSyncLab_MemberIdResolver::resolve($client, $context, ['limit' => 1, 'ids' => []], $config);
-    $sampleIds = array_slice($sampleIds, 0, 1);
+    $resolved = BesSyncLab_MemberIdResolver::resolve($client, $context, ['limit' => 1, 'ids' => []], $config);
+    $sampleIds = array_slice($resolved['ids'], 0, 1);
+    $context['server_filtered_ids'] = $resolved['server_filtered'];
 
     $strategy = new BesSyncLab_SandboxStrategy($client, $metrics, $context, $experiment, $verbose);
     $run = $strategy->run($sampleIds);

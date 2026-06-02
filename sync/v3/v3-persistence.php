@@ -55,7 +55,9 @@ function bseasy_v3_update_status(int $progress, int $total, string $message = ''
         'message' => $message,
         'timestamp' => date('c'),
         'offset' => get_option(BES_V3_OPTION_PREFIX . 'offset', 0),
-        'started_at' => get_option(BES_V3_OPTION_PREFIX . 'started_at', null),
+        'started_at' => (($started_ts = (int) get_option(BES_V3_OPTION_PREFIX . 'sync_started_at', 0)) > 0)
+            ? date('c', $started_ts)
+            : get_option(BES_V3_OPTION_PREFIX . 'started_at', null),
         'last_run_at' => date('c'),
         'cancelled' => ($state === 'cancelled'),
         'last_error' => get_option(BES_V3_OPTION_PREFIX . 'last_error', null),
@@ -70,6 +72,165 @@ function bseasy_v3_update_status(int $progress, int $total, string $message = ''
     bseasy_v3_save_history($data);
     
     return $result !== false;
+}
+
+/**
+ * Startet die Gesamt-Sync-Zeitmessung (nur erster Durchlauf).
+ */
+function bseasy_v3_sync_start_timer($part = 1): void {
+    if ((int) $part > 1) {
+        return;
+    }
+    update_option(BES_V3_OPTION_PREFIX . 'sync_started_at', time());
+}
+
+/**
+ * Beendet Zeitmessung nach erfolgreichem Komplett-Sync.
+ *
+ * @return array{duration_sec:int,duration_human:string}
+ */
+function bseasy_v3_sync_finalize_duration(): array {
+    $duration_sec = 0;
+    $started = (int) get_option(BES_V3_OPTION_PREFIX . 'sync_started_at', 0);
+
+    if ($started > 0) {
+        $duration_sec = max(0, time() - $started);
+    }
+
+    if ($duration_sec <= 0) {
+        $duration_sec = bseasy_v3_sync_compute_duration_from_parts();
+    }
+
+    if ($duration_sec > 0) {
+        update_option(BES_V3_OPTION_PREFIX . 'last_sync_duration_sec', $duration_sec);
+    }
+
+    delete_option(BES_V3_OPTION_PREFIX . 'sync_started_at');
+
+    return [
+        'duration_sec' => $duration_sec,
+        'duration_human' => bseasy_v3_format_duration($duration_sec),
+    ];
+}
+
+/**
+ * Ermittelt Sync-Dauer aus Part-1 started + letztem finished (robust, unabhängig vom Timer).
+ */
+function bseasy_v3_sync_compute_duration_from_parts(): int {
+    if (!defined('BES_DATA_V3') || !defined('BES_V3_MEMBERS_PART_PREFIX')) {
+        return 0;
+    }
+
+    $part_files = glob(BES_DATA_V3 . BES_V3_MEMBERS_PART_PREFIX . '*.json');
+    if (empty($part_files) || !is_array($part_files)) {
+        return 0;
+    }
+
+    usort($part_files, function ($a, $b) {
+        preg_match('/part(\d+)\.json$/', $a, $matchA);
+        preg_match('/part(\d+)\.json$/', $b, $matchB);
+        return ((int) ($matchA[1] ?? 0)) <=> ((int) ($matchB[1] ?? 0));
+    });
+
+    $first = bseasy_v3_read_json($part_files[0]);
+    if (empty($first['_meta']['started'])) {
+        return 0;
+    }
+
+    $start_ts = (int) strtotime((string) $first['_meta']['started']);
+    if ($start_ts <= 0) {
+        return 0;
+    }
+
+    $last_file = $part_files[count($part_files) - 1];
+    $last = bseasy_v3_read_json($last_file);
+    $end_ts = 0;
+    if (!empty($last['_meta']['finished'])) {
+        $end_ts = (int) strtotime((string) $last['_meta']['finished']);
+    }
+    if ($end_ts <= 0) {
+        $end_ts = time();
+    }
+
+    return $end_ts >= $start_ts ? ($end_ts - $start_ts) : 0;
+}
+
+/**
+ * Stellt sicher, dass die letzte Sync-Dauer gespeichert ist (Fallback nach abgeschlossenem Sync).
+ *
+ * @return array{duration_sec:int,duration_human:string}
+ */
+function bseasy_v3_sync_ensure_duration_stored(): array {
+    $duration_sec = (int) get_option(BES_V3_OPTION_PREFIX . 'last_sync_duration_sec', 0);
+
+    if ($duration_sec <= 0) {
+        $duration_sec = bseasy_v3_sync_compute_duration_from_parts();
+        if ($duration_sec > 0) {
+            update_option(BES_V3_OPTION_PREFIX . 'last_sync_duration_sec', $duration_sec);
+        }
+    }
+
+    return [
+        'duration_sec' => $duration_sec,
+        'duration_human' => bseasy_v3_format_duration($duration_sec),
+    ];
+}
+
+/**
+ * Letzte gespeicherte Sync-Dauer (nach erfolgreichem Abschluss).
+ *
+ * @return array{duration_sec:int,duration_human:string}
+ */
+function bseasy_v3_get_last_sync_duration(): array {
+    $duration_sec = (int) get_option(BES_V3_OPTION_PREFIX . 'last_sync_duration_sec', 0);
+
+    return [
+        'duration_sec' => $duration_sec,
+        'duration_human' => bseasy_v3_format_duration($duration_sec),
+    ];
+}
+
+/**
+ * Formatiert Sekunden für die Admin-Anzeige (deutsch).
+ */
+function bseasy_v3_format_duration(int $seconds): string {
+    if ($seconds <= 0) {
+        return '';
+    }
+
+    if ($seconds < 60) {
+        return sprintf('%d Sek', $seconds);
+    }
+
+    $minutes = intdiv($seconds, 60);
+    $remaining = $seconds % 60;
+
+    if ($minutes < 60) {
+        if ($remaining > 0) {
+            return sprintf('%d Min %d Sek', $minutes, $remaining);
+        }
+        return sprintf('%d Min', $minutes);
+    }
+
+    $hours = intdiv($minutes, 60);
+    $minutes = $minutes % 60;
+
+    if ($minutes > 0) {
+        return sprintf('%d Std %d Min', $hours, $minutes);
+    }
+
+    return sprintf('%d Std', $hours);
+}
+
+/**
+ * Hängt die Dauer an eine Erfolgsmeldung an (falls vorhanden).
+ */
+function bseasy_v3_sync_message_with_duration(string $message, array $duration): string {
+    if (empty($duration['duration_human'])) {
+        return $message;
+    }
+
+    return $message . ' — Dauer: ' . $duration['duration_human'];
 }
 
 /**

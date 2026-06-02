@@ -66,6 +66,7 @@ Upgrade von **bseasy-sync-main**: siehe [docs/MIGRATION.md](docs/MIGRATION.md)
 | [docs/MANUAL_TESTS.md](docs/MANUAL_TESTS.md) | Manuelle Test-Checkliste |
 | [docs/MIGRATION.md](docs/MIGRATION.md) | Migration Main → V4 |
 | [docs/BACKLOG.md](docs/BACKLOG.md) | Priorisierte Aufgaben |
+| [docs/SYNC_PLAN.md](docs/SYNC_PLAN.md) | Sync-Fahrplan (Lab, Optimized, Auto-Sync) |
 | [docs/CHANGELOG.md](docs/CHANGELOG.md) | Versionshistorie |
 | [MODULE_OVERVIEW.md](MODULE_OVERVIEW.md) | Architektur & Module |
 

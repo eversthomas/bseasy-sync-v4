@@ -211,13 +211,11 @@ final class BesSyncLab_ApiClient
         $raw = curl_exec($ch);
         if ($raw === false) {
             $err = curl_error($ch);
-            curl_close($ch);
             throw new RuntimeException("cURL-Fehler: $err");
         }
 
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         $headerRaw = substr($raw, 0, $headerSize);
         $body = substr($raw, $headerSize);

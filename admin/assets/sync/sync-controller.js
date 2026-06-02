@@ -55,12 +55,9 @@
                     besSyncUi.syncStatus.css('color', '#00a32a');
                     besSyncUi.syncBox.removeClass('bes-sync-running bes-sync-error').addClass('bes-sync-done');
 
-                    let successMsg = '✅ ' + (s.message || 'V3 Sync erfolgreich abgeschlossen');
-                    if (s.members_with_consent !== null && s.members_with_consent !== undefined) {
-                        successMsg += ' (' + s.members_with_consent.toLocaleString('de-DE') + ' Mitglieder mit Consent)';
-                    }
+                    const successMsg = besSyncUi.formatSyncSuccessMessage(s);
                     besSyncUi.syncStatus.html('<strong style="color: #00a32a;">' + successMsg + '</strong>');
-                    $('#bes-v3-sync-message').html('<strong style="color: #00a32a;">✅ ' + (s.message || 'Sync abgeschlossen') + '</strong>');
+                    $('#bes-v3-sync-message').html('<strong style="color: #00a32a;">' + successMsg + '</strong>');
 
                     // Zeige Reset-Button, verstecke Stop-Button
                     $('#bes-v3-stop-sync').hide();
@@ -176,10 +173,7 @@
             const progress = Math.max(0, Math.min(100, s.progress || 100));
             besSyncUi.syncBar.css('width', progress + '%');
 
-            let successMsg = '✅ ' + (s.message || 'V3 Sync erfolgreich abgeschlossen');
-            if (s.members_with_consent !== null && s.members_with_consent !== undefined) {
-                successMsg += ' (' + s.members_with_consent.toLocaleString('de-DE') + ' Mitglieder mit Consent)';
-            }
+            const successMsg = besSyncUi.formatSyncSuccessMessage(s);
             besSyncUi.syncStatus.html('<strong style="color: #00a32a;">' + successMsg + '</strong>');
             besSyncUi.syncStatus.css('color', '#00a32a');
             besSyncUi.syncBox.removeClass('bes-sync-running bes-sync-error').addClass('bes-sync-done');

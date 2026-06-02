@@ -6,11 +6,21 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ## [Unreleased]
 
+### Hinzugefügt
+
+- **Sync-Dauer-Anzeige** — nach erfolgreichem Sync in Admin-Meldung und Sync-Tab (`6 Min 25 Sek` bei 156 Membern, Juni 2026)
+- **Sync-Lab** — isoliertes CLI unter `dev/sync-lab/` (baseline vs. optimized)
+
 ### Geplant
 
-- Select-Feld-Fix aus Main portieren (On-Demand-Abruf, Cache-TTL) — siehe `docs/BACKLOG.md` P0
-- Sync-Optimierung (Fehlertoleranz, API-Request-Reduktion)
-- Mitglieder-Short-URLs, Netzwerk-Badge, Geomatching-Shortcode
+Siehe [`docs/SYNC_PLAN.md`](SYNC_PLAN.md) — empfohlene Reihenfolge:
+
+1. Select-Feld-Fix aus Main portieren
+2. Sync-Lab validieren (20–50 Member)
+3. Optimized-Sync + Feature-Flag (nur bei Lab-Erfolg)
+4. Automatischer Sync (WP-Cron recurring)
+5. Migration + Vollsync 330
+6. Mitglieder-Short-URLs, Netzwerk-Badge, Geomatching
 
 ---
 

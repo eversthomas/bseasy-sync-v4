@@ -3,7 +3,7 @@
  * Sync-Tab: V3 Sync-Karte (HTML-Partial).
  *
  * Erwartet Variablen aus sync-data-loader.php:
- *   $last_sync_time_v3, $members_with_consent_v3
+ *   $last_sync_time_v3, $members_with_consent_v3, $last_sync_duration_human_v3
  *
  * @package BSEasySync
  */
@@ -36,7 +36,10 @@ if (!defined('ABSPATH')) exit;
             <p class="bes-card-text">
                 <strong>Letzter erfolgreicher Sync:</strong> <?php echo esc_html(wp_date('d.m.Y H:i:s', strtotime($last_sync_time_v3))); ?><br>
                 <?php if ($members_with_consent_v3 !== false): ?>
-                    <strong>Mitglieder mit Consent:</strong> <?php echo esc_html(number_format($members_with_consent_v3, 0, ',', '.')); ?>
+                    <strong>Mitglieder mit Consent:</strong> <?php echo esc_html(number_format($members_with_consent_v3, 0, ',', '.')); ?><br>
+                <?php endif; ?>
+                <?php if (!empty($last_sync_duration_human_v3)): ?>
+                    <strong>Dauer:</strong> <?php echo esc_html($last_sync_duration_human_v3); ?>
                 <?php endif; ?>
             </p>
         <?php endif; ?>

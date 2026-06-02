@@ -45,6 +45,9 @@ require_once BES_DIR . 'sync/api-core-consent-member-fetch.php';
  * @return array Ergebnis
  */
 function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
+    $offset = (int) $offset;
+    $limit = (int) $limit;
+
     try {
         // Stelle sicher, dass Verzeichnisse existieren
         bseasy_v3_setup_directories();
@@ -133,6 +136,10 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         }
         
         bseasy_v3_log("V3 Sync gestartet – Offset $offset, Limit $limit", 'INFO');
+
+        if ($offset === 0) {
+            bseasy_v3_sync_start_timer(1);
+        }
         
         // ============================================================
         // PHASE 1: Member-ID-Sammlung (wie V2)
@@ -286,6 +293,8 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         // ============================================================
         // Merge am Ende
         // ============================================================
+
+        $merge_result = null;
         
         if ($end >= $total) {
             bseasy_v3_log("PHASE 3: Führe alle Teile zusammen (V3)...", 'INFO');
@@ -307,8 +316,8 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
         
         // Berechne ob weitere Durchläufe nötig sind
         $needs_more = ($offset + $limit) < $total;
-        
-        return [
+
+        $return = [
             'success' => true,
             'ok' => true,
             'message' => "Durchlauf $current_part/$estimated_parts abgeschlossen",
@@ -319,6 +328,13 @@ function bseasy_v3_run_sync(int $offset = 0, int $limit = 200): array {
             'members_total' => $total,
             'needs_more' => $needs_more
         ];
+
+        if (!empty($merge_result['success'])) {
+            $return['duration_sec'] = (int) ($merge_result['duration_sec'] ?? 0);
+            $return['duration_human'] = (string) ($merge_result['duration_human'] ?? '');
+        }
+
+        return $return;
         
     } catch (Exception $e) {
         $error_msg = $e->getMessage();
@@ -1048,6 +1064,8 @@ function bseasy_v3_merge_parts(): array {
         
         update_option(BES_V3_OPTION_PREFIX . 'last_sync_time', date('Y-m-d H:i:s'));
         update_option(BES_V3_OPTION_PREFIX . 'last_sync_members_with_consent', count($merged));
+
+        $duration = bseasy_v3_sync_finalize_duration();
         
         if (function_exists('bes_clear_render_cache')) {
             bes_clear_render_cache();
@@ -1063,7 +1081,9 @@ function bseasy_v3_merge_parts(): array {
                 $mergedMeta['parts_count']
             ),
             'members_count' => count($merged),
-            'parts_count' => $mergedMeta['parts_count']
+            'parts_count' => $mergedMeta['parts_count'],
+            'duration_sec' => $duration['duration_sec'],
+            'duration_human' => $duration['duration_human'],
         ];
         
     } catch (Exception $e) {

@@ -10,17 +10,43 @@ final class BesSyncLab_StrategySupport
     public static function hasConsent(array $customFields, int $consentFieldId): bool
     {
         foreach ($customFields as $cf) {
-            $cfRef = (string) ($cf['customField'] ?? '');
-            if ($consentFieldId > 0 && strpos($cfRef, (string) $consentFieldId) === false) {
+            if (!is_array($cf)) {
                 continue;
             }
-            $val = $cf['value'] ?? null;
-            if ($val === true) {
+            if (!self::matchesConsentField($cf, $consentFieldId)) {
+                continue;
+            }
+            if (self::isTruthyConsentValue($cf['value'] ?? null)) {
                 return true;
             }
-            if (is_string($val) && strtolower(trim($val)) === 'true') {
-                return true;
-            }
+        }
+        return false;
+    }
+
+    /** @param array<string,mixed> $cf */
+    public static function matchesConsentField(array $cf, int $consentFieldId): bool
+    {
+        if ($consentFieldId <= 0) {
+            return true;
+        }
+        $ref = $cf['customField'] ?? null;
+        if (is_array($ref) && isset($ref['id'])) {
+            return (int) $ref['id'] === $consentFieldId;
+        }
+        if (is_numeric($ref)) {
+            return (int) $ref === $consentFieldId;
+        }
+        return strpos((string) $ref, (string) $consentFieldId) !== false;
+    }
+
+    public static function isTruthyConsentValue(mixed $val): bool
+    {
+        if ($val === true || $val === 1) {
+            return true;
+        }
+        if (is_string($val)) {
+            $v = strtolower(trim($val));
+            return in_array($v, ['true', '1', 'yes', 'ja'], true);
         }
         return false;
     }
@@ -59,6 +85,13 @@ final class BesSyncLab_StrategySupport
     {
         $out = [];
         foreach ($items as $cf) {
+            if (is_string($cf)) {
+                $out[] = ['id' => null, 'customField' => $cf, 'value' => null];
+                continue;
+            }
+            if (!is_array($cf)) {
+                continue;
+            }
             $out[] = [
                 'id' => $cf['id'] ?? null,
                 'customField' => $cf['customField'] ?? null,

@@ -147,7 +147,10 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
     $auto_continue = (bool) get_option(BES_V3_OPTION_PREFIX . 'auto_continue', false);
     $total_members = (int) get_option(BES_V3_OPTION_PREFIX . 'total_members', 0);
     
-    $part = get_option(BES_V3_OPTION_PREFIX . 'current_part', 1);
+    $part = (int) get_option(BES_V3_OPTION_PREFIX . 'current_part', 1);
+    if ($part < 1) {
+        $part = 1;
+    }
     $offset = ($part - 1) * $batch_size;
     
     $estimated_parts = $total_members > 0 ? ceil($total_members / $batch_size) : 0;
@@ -179,6 +182,10 @@ add_action('wp_ajax_bes_v3_start_sync', function () {
     
     // Speichere current_part in Option
     update_option(BES_V3_OPTION_PREFIX . 'current_part', $part);
+
+    if ($part === 1) {
+        bseasy_v3_sync_start_timer(1);
+    }
     
     // Status setzen
     bes_sync_update_status(0, 0, "Starte Durchlauf $part" . ($estimated_parts > 0 ? " von ~$estimated_parts" : "") . " ...", 'running', [
@@ -278,6 +285,25 @@ add_action('wp_ajax_bes_v3_status', function () {
     }
     if (!isset($data['last_sync_time']) || $data['last_sync_time'] === null) {
         $data['last_sync_time'] = get_option(BES_V3_OPTION_PREFIX . 'last_sync_time', null);
+    }
+
+    $duration = bseasy_v3_get_last_sync_duration();
+    if (($duration['duration_sec'] ?? 0) <= 0 && isset($data['state']) && $data['state'] === 'done') {
+        $duration = bseasy_v3_sync_ensure_duration_stored();
+        if ($duration['duration_human'] !== '' && isset($data['message']) && strpos($data['message'], ' — Dauer: ') === false) {
+            $data['message'] = bseasy_v3_sync_message_with_duration((string) $data['message'], $duration);
+        }
+    }
+    if (!isset($data['duration_sec']) || $data['duration_sec'] === null) {
+        $data['duration_sec'] = $duration['duration_sec'] > 0 ? $duration['duration_sec'] : null;
+    }
+    if (!isset($data['duration_human']) || $data['duration_human'] === null || $data['duration_human'] === '') {
+        if (!empty($data['duration_sec'])) {
+            $data['duration_human'] = bseasy_v3_format_duration((int) $data['duration_sec']);
+        } elseif ($duration['duration_human'] !== '') {
+            $data['duration_human'] = $duration['duration_human'];
+            $data['duration_sec'] = $duration['duration_sec'];
+        }
     }
     
     // Sync-Part-Informationen (für Statusleiste)
@@ -389,10 +415,17 @@ add_action('wp_ajax_bes_v3_merge_parts', function () {
         if (function_exists('bes_clear_render_cache')) {
             bes_clear_render_cache();
         }
+
+        $msg = "✅ Zusammenführung erfolgreich: {$result['members_count']} Mitglieder aus {$result['parts_count']} Teilen";
+        if (!empty($result['duration_human'])) {
+            $msg .= ' — Dauer: ' . $result['duration_human'];
+        }
         
         wp_send_json_success([
-            'msg' => "✅ Zusammenführung erfolgreich: {$result['members_count']} Mitglieder aus {$result['parts_count']} Teilen",
-            'count' => $result['members_count']
+            'msg' => $msg,
+            'count' => $result['members_count'],
+            'duration_sec' => $result['duration_sec'] ?? null,
+            'duration_human' => $result['duration_human'] ?? '',
         ]);
     } else {
         $err        = (string) ($result['error'] ?? __('Unbekannter Fehler', BES_TEXT_DOMAIN));

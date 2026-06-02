@@ -81,6 +81,13 @@ add_action('bes_run_explorer_v3', function ($sample_size = null, $fresh_from_api
  * @param int $part Aktuelle Durchlauf-Nummer
  */
 add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
+    $offset = (int) $offset;
+    $limit = (int) $limit;
+    $part = (int) $part;
+    if ($part < 1) {
+        $part = 1;
+    }
+
     try {
         // Prüfe ob Sync gestoppt wurde
         $status_file = BES_DATA_V3 . BES_V3_STATUS_FILE;
@@ -101,6 +108,10 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
         
         // Speichere current_part in Option
         update_option(BES_V3_OPTION_PREFIX . 'current_part', $part);
+
+        if ($part === 1) {
+            bseasy_v3_sync_start_timer(1);
+        }
         
         $total_parts_estimated = $total_members > 0 ? ceil($total_members / $batch_size) : 0;
         
@@ -220,11 +231,23 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
                         $merge_was_successful = true;
                         update_option(BES_V3_OPTION_PREFIX . 'last_sync_time', current_time('mysql'));
                         update_option(BES_V3_OPTION_PREFIX . 'last_sync_members_with_consent', (int)($merge_result['members_count'] ?? 0));
+                        $duration = [
+                            'duration_sec' => (int) ($merge_result['duration_sec'] ?? 0),
+                            'duration_human' => (string) ($merge_result['duration_human'] ?? ''),
+                        ];
+                        if ($duration['duration_human'] === '' && $duration['duration_sec'] > 0) {
+                            $duration['duration_human'] = bseasy_v3_format_duration($duration['duration_sec']);
+                        }
+                        $done_message = bseasy_v3_sync_message_with_duration(
+                            "✅ Alle Durchläufe abgeschlossen und zusammengeführt: {$merge_result['members_count']} Mitglieder",
+                            $duration
+                        );
                         bseasy_v3_update_status(
                             100,
                             100,
-                            "✅ Alle Durchläufe abgeschlossen und zusammengeführt: {$merge_result['members_count']} Mitglieder",
-                            'done'
+                            $done_message,
+                            'done',
+                            $duration
                         );
                     } else {
                         bseasy_v3_update_status(
@@ -235,7 +258,18 @@ add_action(BES_V3_CRON_HOOK, function ($offset = 0, $limit = 200, $part = 1) {
                         );
                     }
                 } else {
-                    bseasy_v3_update_status(100, 100, "✅ Alle Durchläufe abgeschlossen und zusammengeführt.", 'done');
+                    $duration = bseasy_v3_sync_ensure_duration_stored();
+                    if (($duration['duration_sec'] ?? 0) <= 0 && !empty($result['duration_sec'])) {
+                        $duration = [
+                            'duration_sec' => (int) $result['duration_sec'],
+                            'duration_human' => (string) ($result['duration_human'] ?? bseasy_v3_format_duration((int) $result['duration_sec'])),
+                        ];
+                    }
+                    $done_message = bseasy_v3_sync_message_with_duration(
+                        "✅ Alle Durchläufe abgeschlossen und zusammengeführt.",
+                        $duration
+                    );
+                    bseasy_v3_update_status(100, 100, $done_message, 'done', $duration);
                 }
                 
                 // Lösche total_members nur wenn Merge erfolgreich war
