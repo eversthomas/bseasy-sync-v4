@@ -322,4 +322,76 @@ function bes_render_filterbar(array $filter_fields, array $filter_values, array 
     return ob_get_clean();
 }
 
+/**
+ * Sortier-Priorität für Namensfelder: immer Vorname vor Nachname.
+ */
+function bes_field_name_sort_priority(string $field_id): int
+{
+    if (stripos($field_id, 'firstName') !== false) {
+        return 0;
+    }
+    if (stripos($field_id, 'familyName') !== false) {
+        return 1;
+    }
+    return 2;
+}
+
+/**
+ * Vergleicht zwei Felder einer Card-Area (order + Namensgruppe).
+ */
+function bes_compare_area_fields(array $a, array $b): int
+{
+    $group_a = $a['inline_group'] ?? '';
+    $group_b = $b['inline_group'] ?? '';
+
+    if ($group_a === 'name' && $group_b === 'name') {
+        $prio = bes_field_name_sort_priority($a['id'] ?? '') <=> bes_field_name_sort_priority($b['id'] ?? '');
+        if ($prio !== 0) {
+            return $prio;
+        }
+    }
+
+    return ($a['order'] ?? 0) <=> ($b['order'] ?? 0);
+}
+
+/**
+ * CSS-sicherer Slug für inline_group (Leerzeichen → Bindestrich).
+ */
+function bes_inline_group_css_class(?string $group): string
+{
+    if ($group === null || $group === '') {
+        return '';
+    }
+    return sanitize_title($group);
+}
+
+/**
+ * Hängt gesammelte Inline-Gruppen-HTML nur aus, wenn Inhalt vorhanden ist.
+ */
+function bes_flush_inline_group_html(string &$html, ?string $current_group, string $group_html): void
+{
+    if (trim($group_html) === '') {
+        return;
+    }
+
+    if ($current_group !== null && $current_group !== '') {
+        $slug = esc_attr(bes_inline_group_css_class($current_group));
+        $html .= "<div class='bes-inline-group bes-inline-{$slug}'>{$group_html}</div>";
+        return;
+    }
+
+    $html .= $group_html;
+}
+
+/**
+ * Format für Card-Felder: Namensgruppe standardmäßig fett.
+ */
+function bes_field_display_format(array $field): string
+{
+    $format = $field['format'] ?? 'normal';
+    if (($field['inline_group'] ?? '') === 'name') {
+        return 'bold';
+    }
+    return $format;
+}
 

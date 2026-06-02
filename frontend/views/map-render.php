@@ -319,7 +319,7 @@ function bes_render_members_map(): string
 
         // 1️⃣ Filtere alle sichtbaren Felder dieser Area und sortiere nach 'order'
         $fields_in_area = array_filter($config, fn($f) => !empty($f['show']) && $f['area'] === $area);
-        usort($fields_in_area, fn($a, $b) => ($a['order'] ?? 0) <=> ($b['order'] ?? 0));
+        usort($fields_in_area, 'bes_compare_area_fields');
 
         $current_group = null;
         $group_html = '';
@@ -330,16 +330,12 @@ function bes_render_members_map(): string
 
             $fid    = $field['id'];
             $label  = isset($field['label']) && trim($field['label']) !== '' ? esc_html($field['label']) : '';
-            $format = $field['format'] ?? 'normal';
+            $format = function_exists('bes_field_display_format') ? bes_field_display_format($field) : ($field['format'] ?? 'normal');
             $group  = $field['inline_group'] ?? null;
 
             // Gruppenwechsel: vorherige Gruppe abschließen
             if ($current_group !== null && $group !== $current_group) {
-                if ($current_group) {
-                    $html .= "<div class='bes-inline-group bes-inline-{$current_group}'>{$group_html}</div>";
-                } else {
-                    $html .= $group_html;
-                }
+                bes_flush_inline_group_html($html, $current_group, $group_html);
                 $group_html = '';
             }
 
@@ -378,13 +374,7 @@ function bes_render_members_map(): string
         }
 
         // 3️⃣ Letzte Gruppe anhängen
-        if ($group_html !== '') {
-            if ($current_group) {
-                $html .= "<div class='bes-inline-group bes-inline-{$current_group}'>{$group_html}</div>";
-            } else {
-                $html .= $group_html;
-            }
-        }
+        bes_flush_inline_group_html($html, $current_group, $group_html);
 
         return $html;
     };

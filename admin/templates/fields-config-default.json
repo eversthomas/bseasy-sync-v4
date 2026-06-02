@@ -10,7 +10,8 @@
         "show_in_filterbar": false,
         "inline_group": "name",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.contact.familyName": {
         "id": "contact.contact.familyName",
@@ -23,7 +24,8 @@
         "show_in_filterbar": false,
         "inline_group": "name",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.contact.companyStreet": {
         "id": "contact.contact.companyStreet",
@@ -36,7 +38,8 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.contact.companyZip": {
         "id": "contact.contact.companyZip",
@@ -50,7 +53,8 @@
         "filter_priority": null,
         "inline_group": "plz",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.contact.companyCity": {
         "id": "contact.contact.companyCity",
@@ -63,7 +67,8 @@
         "show_in_filterbar": false,
         "inline_group": "plz",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.contact.companyCountry": {
         "id": "contact.contact.companyCountry",
@@ -72,11 +77,13 @@
         "order": 6,
         "area": "above",
         "show_label": false,
-        "filterable": false,
-        "show_in_filterbar": false,
+        "filterable": true,
+        "show_in_filterbar": true,
+        "filter_priority": null,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50697325": {
         "id": "cf.50697325",
@@ -89,39 +96,72 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
+    },
+    "cf.50359307": {
+        "id": "cf.50359307",
+        "label": "Zielgruppen",
+        "show": true,
+        "order": 8,
+        "area": "above",
+        "show_label": true,
+        "filterable": true,
+        "show_in_filterbar": true,
+        "filter_priority": null,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
+    },
+    "contact.contact.companyState": {
+        "id": "contact.contact.companyState",
+        "label": "Kontakt: Contact.company State",
+        "show": true,
+        "order": 1,
+        "area": "below",
+        "show_label": true,
+        "filterable": true,
+        "show_in_filterbar": true,
+        "filter_priority": null,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
     },
     "cf.313634622": {
         "id": "cf.313634622",
         "label": "Motto",
         "show": true,
-        "order": 8,
-        "area": "above",
+        "order": 2,
+        "area": "below",
         "show_label": true,
         "filterable": false,
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50697329": {
         "id": "cf.50697329",
         "label": "Webseite 2",
         "show": true,
-        "order": 1,
+        "order": 3,
         "area": "below",
         "show_label": false,
         "filterable": false,
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": true,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.312976233": {
         "id": "cf.312976233",
         "label": "Methoden 1",
         "show": true,
-        "order": 2,
+        "order": 4,
         "area": "below",
         "show_label": true,
         "filterable": false,
@@ -129,27 +169,14 @@
         "filter_priority": null,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
-    },
-    "cf.50359307": {
-        "id": "cf.50359307",
-        "label": "Zielgruppen",
-        "show": true,
-        "order": 3,
-        "area": "below",
-        "show_label": true,
-        "filterable": true,
-        "show_in_filterbar": true,
-        "filter_priority": null,
-        "inline_group": "",
-        "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50697357": {
         "id": "cf.50697357",
         "label": "Angebote",
         "show": true,
-        "order": 4,
+        "order": 5,
         "area": "below",
         "show_label": true,
         "filterable": true,
@@ -157,26 +184,28 @@
         "filter_priority": null,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50799935": {
         "id": "cf.50799935",
         "label": "Methoden-2",
         "show": true,
-        "order": 5,
+        "order": 6,
         "area": "below",
         "show_label": true,
         "filterable": false,
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50698968": {
         "id": "cf.50698968",
         "label": "Selbstzahler",
         "show": true,
-        "order": 6,
+        "order": 7,
         "area": "below",
         "show_label": true,
         "filterable": true,
@@ -184,7 +213,8 @@
         "filter_priority": null,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.geoPositionCoords.lat": {
         "id": "contact.geoPositionCoords.lat",
@@ -197,7 +227,8 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "contact.geoPositionCoords.lng": {
         "id": "contact.geoPositionCoords.lng",
@@ -210,7 +241,8 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "member.id": {
         "id": "member.id",
@@ -223,7 +255,8 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
     },
     "cf.50359304": {
         "id": "cf.50359304",
@@ -236,7 +269,64 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": false
+        "ignored": false,
+        "badge": false
+    },
+    "cf.51060631": {
+        "id": "cf.51060631",
+        "label": "Ja/Nein",
+        "show": true,
+        "order": 5,
+        "area": "unused",
+        "show_label": true,
+        "filterable": false,
+        "show_in_filterbar": false,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
+    },
+    "cf.51386609": {
+        "id": "cf.51386609",
+        "label": "Ja/Nein",
+        "show": true,
+        "order": 6,
+        "area": "unused",
+        "show_label": true,
+        "filterable": false,
+        "show_in_filterbar": false,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
+    },
+    "contact.contact.companyName": {
+        "id": "contact.contact.companyName",
+        "label": "Kontakt: Contact.company Name",
+        "show": true,
+        "order": 7,
+        "area": "unused",
+        "show_label": true,
+        "filterable": false,
+        "show_in_filterbar": false,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
+    },
+    "contact.contact.company_country_code_invoice": {
+        "id": "contact.contact.company_country_code_invoice",
+        "label": "Kontakt: Contact.company Country Code Invoice",
+        "show": true,
+        "order": 8,
+        "area": "unused",
+        "show_label": true,
+        "filterable": false,
+        "show_in_filterbar": false,
+        "inline_group": "",
+        "favorite": false,
+        "ignored": false,
+        "badge": false
     },
     "member.membershipNumber": {
         "id": "member.membershipNumber",
@@ -249,6 +339,7 @@
         "show_in_filterbar": false,
         "inline_group": "",
         "favorite": false,
-        "ignored": true
+        "ignored": true,
+        "badge": false
     }
 }
