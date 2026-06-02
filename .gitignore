@@ -56,8 +56,11 @@ uploads/
 # Claude Code Arbeitsverzeichnisse
 .claude/
 
-# Entwicklungsreferenz
-dev/
+# Entwicklungsreferenz (sync-lab ist versioniert)
+dev/*
+!dev/sync-lab/
+!dev/sync-lab/**
+!dev/ROADMAP.md
 
 # Debug-Dateien
 debug.log
