@@ -1,38 +1,89 @@
-# BS Easy Sync V4
+# BSEasy Sync V4
 
-WordPress-Plugin zum Synchronisieren von EasyVerein-Mitgliedsdaten nach WordPress und zur Ausgabe als Berater-/Mitglieder-Cards im Frontend (inkl. Filter, Karte und Toggle-Ansicht).
+WordPress-Plugin zur Synchronisation von EasyVerein-Mitgliedsdaten (API v2.0) und zur Ausgabe als Berater-/Mitglieder-Cards im Frontend — inkl. Filter, Karte, Umkreissuche und Toggle-Ansicht.
+
+**Version:** 4.0.0  
+**Text Domain:** `besync`
+
+---
 
 ## Voraussetzungen
 
-- WordPress (aktuelle LTS empfohlen)
-- PHP (8.x empfohlen)
-- EasyVerein-Account inkl. API-Zugang / Token
-- Schreibrechte für `wp-content/uploads/` (Plugin speichert Sync-Daten in `uploads/bseasy-sync/`)
+- WordPress 5.8+ (getestet mit WordPress 7.x)
+- PHP 7.4+ (8.x empfohlen)
+- EasyVerein-Account mit API-Token
+- Schreibrechte für `wp-content/uploads/` (Daten in `uploads/bseasy-sync/`)
+
+---
 
 ## Installation
 
-1. Plugin-Ordner `bseasy-sync-v4/` nach `wp-content/plugins/` kopieren.
-2. Im WordPress-Backend unter **Plugins** aktivieren.
-3. Plugin-Adminseite öffnen und den EasyVerein API-Key/Token hinterlegen.
-4. Sync/Explorer ausführen (je nach Setup), danach stehen Daten im Frontend zur Verfügung.
+1. Plugin-Ordner `bseasy-sync-v4/` nach `wp-content/plugins/` kopieren
+2. Im WordPress-Backend unter **Plugins** aktivieren
+3. **BSEasy Sync** im Admin-Menü öffnen
+4. EasyVerein API-Token hinterlegen
+5. Explorer ausführen → Felder konfigurieren → Sync starten
 
-## Features (Kurzüberblick)
+Upgrade von **bseasy-sync-main**: siehe [docs/MIGRATION.md](docs/MIGRATION.md)
 
-- **Sync**: Synchronisiert Mitgliederdaten aus EasyVerein in lokale JSON-Dateien (inkl. Status/Logs).
-- **Feldverwaltung**: Auswahl/Sortierung der Felder (Bereiche „above/below“), Filter-Optionen, Badge-Flag pro Feld.
-- **Card-Design**: Zentrale Design-Settings (Farben) werden als CSS Custom Properties ins Frontend gespiegelt.
-- **Umkreissuche**: Geo-/Radius-Logik (je nach aktivierter Frontend-Funktionalität/Filter) über die Frontend-AJAX-Schicht.
-- **Shortcodes**: Ausgabe als Kachelansicht, Karte oder Toggle-Ansicht.
+---
 
-## Shortcode-Referenz
+## Shortcodes
 
-Ausgabe der Mitgliederliste:
+### Mitgliederliste
 
-- `[bes_members view="kachel"]`
-- `[bes_members view="map"]`
-- `[bes_members view="toggle"]`
+```
+[bes_members view="kachel"]   ← Kachelansicht (Standard)
+[bes_members view="map"]      ← Nur Karte
+[bes_members view="toggle"]   ← Umschaltbar Kachel ↔ Karte
+```
 
-## Entwickler-Dokumentation
+### Kalender
 
-Für die Modul-/Dateiübersicht und Architekturhinweise siehe `MODULE_OVERVIEW.md`.
+```
+[bes_kalender]
+```
 
+---
+
+## Features
+
+- **Sync** — EasyVerein Consent-API, Explorer, Batch-Sync, Consent-Audit
+- **Feldverwaltung** — Sortierung (above/below), Filter, Badges, Drag & Drop
+- **Card-Design** — Farben als CSS Custom Properties
+- **Karte** — Leaflet.js mit Clustering und Filtern
+- **Umkreissuche** — Radius-Filter über PLZ/Ort
+- **Länderfilter** — DE/AT/CH mit ISO-Normalisierung
+- **Sicherheit** — AES-256-CBC Token-Verschlüsselung, Nonces, Rate-Limiting
+
+---
+
+## Dokumentation
+
+| Dokument | Beschreibung |
+|----------|--------------|
+| [docs/README.md](docs/README.md) | Dokumentations-Übersicht |
+| [docs/MANUAL_TESTS.md](docs/MANUAL_TESTS.md) | Manuelle Test-Checkliste |
+| [docs/MIGRATION.md](docs/MIGRATION.md) | Migration Main → V4 |
+| [docs/BACKLOG.md](docs/BACKLOG.md) | Priorisierte Aufgaben |
+| [docs/CHANGELOG.md](docs/CHANGELOG.md) | Versionshistorie |
+| [MODULE_OVERVIEW.md](MODULE_OVERVIEW.md) | Architektur & Module |
+
+---
+
+## Entwicklung
+
+Architekturregeln (Kurzfassung):
+
+- `includes/` — immer geladen, keine Abhängigkeit zu sync/admin/frontend
+- `sync/` — nur Admin/Cron; Einstieg: `sync/sync-service.php`
+- `frontend/` — Shortcode, Rendering, AJAX
+- Mitgliederdaten — ausschließlich über `includes/data/member-repository.php`
+
+Details: [MODULE_OVERVIEW.md](MODULE_OVERVIEW.md)
+
+---
+
+## Lizenz
+
+GPL v2 or later — Copyright Tom Evers

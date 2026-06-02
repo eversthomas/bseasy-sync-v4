@@ -11,8 +11,13 @@ Dieses Dokument listet alle Module des Plugins mit ihren Dateien und Funktionen.
 - Design-Einstellungen: ausschließlich über `includes/design/design-settings.php`
 
 **Weitere Dokumentation:**
-- `README.md` (Setup/Shortcodes, High-Level Überblick)
-- `dev/ROADMAP.md` (interne Roadmap, nicht produktionsrelevant)
+- `README.md` — Setup, Shortcodes, Schnellstart
+- `docs/README.md` — Dokumentations-Übersicht
+- `docs/MANUAL_TESTS.md` — Manuelle Test-Checkliste
+- `docs/MIGRATION.md` — Migration von bseasy-sync-main
+- `docs/BACKLOG.md` — Priorisierte Aufgaben (P0–P3)
+- `docs/CHANGELOG.md` — Versionshistorie
+- `dev/ROADMAP.md` — Technische Detail-Roadmap (A–J)
 
 ## Coding-Regeln
 
