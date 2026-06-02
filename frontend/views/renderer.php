@@ -363,12 +363,11 @@ function bes_render_members(): string
     // Jetzt wp_kses_post anwenden (nur auf String)
     $value = wp_kses_post($value);
 
-    // Klickbare Links
+    // Klickbare Links (kurzer Anzeigetext, z. B. solutionsteps.ch)
     if (preg_match('/^(https?:\/\/|www\.)/i', $value)) {
-      if (!str_starts_with($value, 'http')) {
-        $value = 'https://' . $value;
-      }
-      $value = '<a href="' . esc_url($value) . '" target="_blank" rel="noopener">' . esc_html($value) . '</a>';
+      $value = function_exists('bes_format_field_link_html')
+        ? bes_format_field_link_html($value)
+        : esc_html($value);
     }
 
     // Formatierung

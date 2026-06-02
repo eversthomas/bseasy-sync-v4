@@ -278,15 +278,18 @@
   font-weight: 600;
 }
 
-.bes-field a {
-  word-break: break-all;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+.bes-field a,
+.bes-field-link {
+  word-break: normal;
+  overflow-wrap: break-word;
+  hyphens: none;
+  text-wrap: pretty;
   color: var(--bes-yellow-dark);
   text-decoration: underline;
 }
 
-.bes-field a:hover {
+.bes-field a:hover,
+.bes-field-link:hover {
   color: var(--bes-yellow);
 }
 

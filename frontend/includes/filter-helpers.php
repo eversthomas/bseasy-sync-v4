@@ -395,3 +395,62 @@ function bes_field_display_format(array $field): string
     return $format;
 }
 
+/**
+ * Lesbarer Link-Text (Domain statt voller URL mit Protokoll).
+ */
+function bes_link_display_label(string $url): string
+{
+    $url = trim($url);
+    if ($url === '') {
+        return '';
+    }
+
+    $href = $url;
+    if (!preg_match('#^https?://#i', $href)) {
+        $href = 'https://' . ltrim($href, '/');
+    }
+
+    $parsed = wp_parse_url($href);
+    if (empty($parsed['host'])) {
+        return preg_replace('#^https?://#i', '', $url);
+    }
+
+    $host = $parsed['host'];
+    if (str_starts_with(strtolower($host), 'www.')) {
+        $host = substr($host, 4);
+    }
+
+    $path = isset($parsed['path']) ? $parsed['path'] : '';
+    if ($path === '/' || $path === '') {
+        return $host;
+    }
+
+    $path = rtrim($path, '/');
+    if (strlen($path) <= 28) {
+        return $host . $path;
+    }
+
+    return $host . '…';
+}
+
+/**
+ * Klickbarer Link für Mitgliederfelder (kurzer Anzeigetext, volle URL in href).
+ */
+function bes_format_field_link_html(string $raw_url): string
+{
+    $raw_url = trim($raw_url);
+    if ($raw_url === '') {
+        return '';
+    }
+
+    $href = $raw_url;
+    if (!preg_match('#^https?://#i', $href)) {
+        $href = 'https://' . ltrim($href, '/');
+    }
+
+    $label = bes_link_display_label($raw_url);
+
+    return '<a class="bes-field-link" href="' . esc_url($href) . '" target="_blank" rel="noopener noreferrer">'
+        . esc_html($label) . '</a>';
+}
+
