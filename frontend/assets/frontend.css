@@ -1321,10 +1321,11 @@
 }
 
 /* Event-Card (basiert auf .bes-card) */
-.bes-event-card {
+.bes-calendar .bes-event-card {
   padding: 1.25rem;
   background: linear-gradient(180deg, var(--bes-yellow) 0%, var(--bes-yellow-light) 100%);
   border: none;
+  overflow: visible;
 }
 
 .bes-event-card::before {
@@ -1376,23 +1377,19 @@
   color: var(--bes-text);
 }
 
-.bes-event-full {
+.bes-calendar .bes-event-full {
+  display: none;
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   font-size: 1rem;
   line-height: 1.5;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.3s ease-out, opacity 0.3s ease-out, padding-top 0.3s ease-out, margin-top 0.3s ease-out;
+  color: var(--bes-text);
+  overflow: visible;
 }
 
-.bes-event-card.is-expanded .bes-event-full {
-  max-height: 2000px; /* Ausreichend groß für längere Inhalte */
-  opacity: 1;
-  padding-top: 0.75rem;
-  margin-top: 0.75rem;
+.bes-calendar .bes-event-card.is-expanded .bes-event-full {
+  display: block;
 }
 
 /* Calendar Buttons */
@@ -1592,16 +1589,17 @@ input:focus-visible {
     color: var(--bes-text-inverse);
   }
 
+  /* Kalender-Buttons: feste Kontraste auf gelber Event-Card (nicht --bes-surface/--bes-text) */
   .bes-readmore,
   .bes-calendar .bes-load-more {
-    background: #222;
-    color: var(--bes-text-inverse);
+    background: #ffffff;
+    color: #1c1c1c;
   }
 
   .bes-readmore:hover,
   .bes-calendar .bes-load-more:hover {
-    background: var(--bes-surface);
-    color: #111;
+    background: #1c1c1c;
+    color: #ffffff;
   }
 }
 

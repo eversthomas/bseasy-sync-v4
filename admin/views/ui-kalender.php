@@ -17,10 +17,11 @@
     </thead>
     <tbody>
       <?php
-      $calendars = get_option('bes_calendars', []);
+      $calendars_saved = get_option('bes_calendars', []);
+      $using_defaults = empty($calendars_saved);
+      $calendars = $calendars_saved;
 
-      // Initialwerte, falls noch leer
-      if (empty($calendars)) {
+      if ($using_defaults) {
         $calendars = [
           ['id' => 'transfer', 'name' => 'Transfer-Angebote', 'url' => '', 'max' => 200],
           ['id' => 'mitglieder', 'name' => 'Mitgliedertermine', 'url' => '', 'max' => 200],
@@ -41,6 +42,12 @@
       <?php endforeach; ?>
     </tbody>
   </table>
+
+  <?php if ($using_defaults): ?>
+  <p class="notice notice-warning inline" style="margin:1em 0;padding:0.75em 1em;">
+    <strong>Hinweis:</strong> Diese Kalender sind noch nicht gespeichert. Shortcodes funktionieren erst nach dem ersten Speichern.
+  </p>
+  <?php endif; ?>
 
   <p><button type="submit" class="button button-primary">💾 Änderungen speichern</button></p>
 </form>
