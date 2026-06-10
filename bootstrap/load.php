@@ -122,9 +122,6 @@ if (file_exists(BES_DIR . 'frontend/includes/design-bridge.php')) {
 if (file_exists(BES_DIR . 'frontend/includes/schema.php')) {
     require_once BES_DIR . 'frontend/includes/schema.php';
 }
-if (file_exists(BES_DIR . 'frontend/includes/og-meta.php')) {
-    require_once BES_DIR . 'frontend/includes/og-meta.php';
-}
 if (file_exists(BES_DIR . 'frontend/includes/geo-utils.php')) {
     require_once BES_DIR . 'frontend/includes/geo-utils.php';
 }
