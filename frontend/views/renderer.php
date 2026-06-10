@@ -594,7 +594,8 @@ function bes_render_members(): string
                   <img
                       src="<?php echo esc_url($img_url); ?>"
                       alt="<?php echo esc_attr($alt_text); ?>"
-                      loading="lazy"
+                      <?php echo $loading_attr; ?>
+                      fetchpriority="<?php echo str_contains($loading_attr, 'eager') ? 'high' : 'auto'; ?>"
                       decoding="async"
                   >
               <?php else: ?>
