@@ -6,6 +6,10 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ## [Unreleased]
 
+### Entfernt
+
+- **Dark Mode** — systembasiertes CSS (`prefers-color-scheme`) und Admin-Kartenstil Hell/Dunkel; Frontend folgt nur noch den Design-Einstellungen im Backend
+
 ### Hinzugefügt
 
 - **Sync-Dauer-Anzeige** — nach erfolgreichem Sync in Admin-Meldung und Sync-Tab (`6 Min 25 Sek` bei 156 Membern, Juni 2026)

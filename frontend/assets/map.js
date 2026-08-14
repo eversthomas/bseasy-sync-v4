@@ -68,20 +68,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Speichere Map-Instanz global für Toggle-Funktionalität
     window.besMapInstance = map;
 
-    // Kartenstil wählen
-    let tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19,
-    });
-
-    if (mapSettings.style === 'dark') {
-      tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors © CartoDB',
-        maxZoom: 19,
-      });
-    }
-
-    tileLayer.addTo(map);
+    }).addTo(map);
 
     // ======================================
     // 2. Marker und Filtering vorbereiten

@@ -18,16 +18,19 @@ if (is_admin() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bes_map
     }
 
     update_option('bes_map_enabled', isset($_POST['bes_map_enabled']) ? 1 : 0);
-    update_option('bes_map_style', sanitize_text_field($_POST['bes_map_style'] ?? 'light'));
     update_option('bes_map_zoom', (int)($_POST['bes_map_zoom'] ?? 6));
     update_option('bes_map_center_lat', floatval($_POST['bes_map_center_lat'] ?? 51.1657));
     update_option('bes_map_center_lng', floatval($_POST['bes_map_center_lng'] ?? 10.4515));
+    // Legacy: früherer Dark-/Light-Kartenstil entfernt
+    delete_option('bes_map_style');
 
     echo '<div class="notice notice-success is-dismissible"><p>✅ Map-Einstellungen gespeichert!</p></div>';
 }
 
+// Legacy-Option aufräumen (Dark-/Light-Kartenstil)
+delete_option('bes_map_style');
+
 $map_enabled = (bool) get_option('bes_map_enabled', 1);
-$map_style = get_option('bes_map_style', 'light');
 $map_zoom = (int) get_option('bes_map_zoom', 6);
 $map_center_lat = floatval(get_option('bes_map_center_lat', 51.1657));
 $map_center_lng = floatval(get_option('bes_map_center_lng', 10.4515));
@@ -55,20 +58,6 @@ $map_center_lng = floatval(get_option('bes_map_center_lng', 10.4515));
                         <p class="description">
                             Wenn aktiviert, können Benutzer die Mitgliederkarte im Frontend anzeigen.
                             Der Shortcode wird um den Parameter <code>view="map"</code> erweitert.
-                        </p>
-                    </td>
-                </tr>
-
-                <!-- Kartenstil -->
-                <tr>
-                    <th scope="row"><label for="bes_map_style">Kartenstil</label></th>
-                    <td>
-                        <select id="bes_map_style" name="bes_map_style">
-                            <option value="light" <?php selected($map_style, 'light'); ?>>Hell (Light)</option>
-                            <option value="dark" <?php selected($map_style, 'dark'); ?>>Dunkel (Dark)</option>
-                        </select>
-                        <p class="description">
-                            Wähle den Kartenstil, der zu deinem Theme passt.
                         </p>
                     </td>
                 </tr>

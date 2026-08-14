@@ -385,7 +385,6 @@ function bes_render_members_map(): string
 
     // Map-Einstellungen laden
     $map_enabled = (bool) get_option('bes_map_enabled', 1);
-    $map_style = get_option('bes_map_style', 'light');
     $map_zoom = (int) get_option('bes_map_zoom', 6);
     $map_center_lat = floatval(get_option('bes_map_center_lat', 51.1657));
     $map_center_lng = floatval(get_option('bes_map_center_lng', 10.4515));
@@ -603,7 +602,6 @@ function bes_render_members_map(): string
             'mapSettings' => [
                 'center' => [$map_center_lat, $map_center_lng],
                 'zoom' => $map_zoom,
-                'style' => $map_style
             ],
             'uploadsUrl' => BES_UPLOADS_URL
         ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
@@ -616,7 +614,6 @@ function bes_render_members_map(): string
              data-map-settings="<?php echo esc_attr(wp_json_encode([
                  'center' => [$map_center_lat, $map_center_lng],
                  'zoom' => $map_zoom,
-                 'style' => $map_style
              ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)); ?>"
              data-uploads-url="<?php echo esc_attr(BES_UPLOADS_URL); ?>">
         </div>
