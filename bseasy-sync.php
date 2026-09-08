@@ -4,7 +4,7 @@
  * Plugin Name: BSEasy Sync V4
  * Plugin URI: https://bezugssysteme.de
  * Description: Synchronisiert Mitglieder- und Kontaktdaten aus EasyVerein (API v2.0) mit WordPress. Zeigt Mitgliederlisten, interaktive Karten und Kalender im Frontend an.
- * Version: 4.0.1
+ * Version: 4.0.2
  * Author: Tom Evers
  * Author URI: https://bezugssysteme.de
  * GitHub Plugin URI: https://github.com/eversthomas/bseasy-sync
@@ -26,7 +26,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin-Version für Caching
-define('BES_VERSION', '4.0.1');
+define('BES_VERSION', '4.0.2');
 define('BES_TEXT_DOMAIN', 'besync');
 
 /**
