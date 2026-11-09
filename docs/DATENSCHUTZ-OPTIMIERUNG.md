@@ -1,6 +1,6 @@
 # Datenschutz & Performance – Optimierungspotenzial
 
-**Stand:** 09.11.2026 (aktualisiert; erste Fassung 06.11.2026)
+**Stand:** 10.11.2026 (aktualisiert; erste Fassung 06.11.2026)
 **Geprüft an:** https://systelios-transfer.de (Live, anonymer Besuch, nur Lesezugriffe) und am Plugin-Code, dazu eine externe Codeanalyse (Cursor, Quelltext-Review) mit eigener Gegenprüfung der Kernbefunde.
 **Zweck:** Entscheidungsgrundlage für Datenschutzerklärung, Opt-in für die Karte und Maßnahmenplan. Keine Rechtsberatung.
 
@@ -11,6 +11,26 @@ Die Einwilligungen der Mitglieder (Profildaten, Adressen) liegen vor. Es geht au
 - Korrigiert: Der Nominatim-Abruf im Sync hat laut Log nie stattgefunden; Mitgliederadressen sind dort nie an OSM gegangen (Abschnitt 3).
 - Korrigiert: Das Emoji-Skript lädt nur bei Browsern ohne Emoji-Unterstützung Bilder von `s.w.org` (Abschnitt 4).
 - Neu: Bewertung der externen Codeanalyse und Maßnahmenplan (Abschnitte 7 und 8).
+
+---
+
+## Umsetzungsstand (Branch `privacy/osm-optin`, Version 4.0.3)
+
+Vorgehen: minimal-invasiv, nur die datenschutzrechtlich nötigen Änderungen; Details in [UMSETZUNGSPLAN-DATENSCHUTZ.md](UMSETZUNGSPLAN-DATENSCHUTZ.md). Live noch **nicht** eingespielt (Stand 10.11.2026).
+
+| Maßnahme | Status | Commit |
+|----------|--------|--------|
+| OSM-Kacheln erst nach Zustimmung (Click-to-load, `localStorage`, Notausgang-Filter `bes_map_optin_enabled`) | umgesetzt, lokal getestet | `4463364` |
+| Design des Platzhalters, Widerruf („Kartendienst deaktivieren"), OSM-Attribution mit Link, Barrierefreiheit | umgesetzt (Test im echten Seitenkontext folgt im Gesamttest) | `7be4749` |
+| JSON-LD mit Hex-Escaping | umgesetzt | `b793ec1` |
+| Version 4.0.3, Changelog, README-Datenschutzhinweis | umgesetzt | `847b42c` |
+| Gesamttest, Merge nach `master`, Einspielen | offen (Schritt 5) | – |
+| Serverseitig (Betreuer): `info.php` löschen, `sync.log` und `fields-config.json` sperren, DEBUG-Logging aus | offen, außerhalb des Plugins | – |
+| Datenschutzerklärung der Seite ergänzen | offen, Betreiber | – |
+| Emoji-Skript | bewusst nicht im Plugin (WordPress-Thema, Hinweis in der Datenschutzerklärung) | – |
+| Koordinaten runden, Nominatim-Sync entfernen, Bildformate, `uninstall.php`, Lazy-Loading-Aufräumen u. a. | zurückgestellt (Refactoring später, Abschnitt 8 „Bald"/„Später") | – |
+
+Hinweis: Abschnitt 8 unten enthält den ursprünglichen Gesamtplan. Maßnahmen 2 (JSON-LD), 4 (OSM-Opt-in) und die Versionsanpassung sind darin umgesetzt; Maßnahme 3 (Koordinaten runden), 5 (Nominatim-Sync) und 7 (Emoji-Option) sind bewusst zurückgestellt bzw. verworfen.
 
 ---
 
