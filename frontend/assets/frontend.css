@@ -1586,3 +1586,24 @@ input:focus-visible {
     max-width: 240px !important;
   }
 }
+
+/* --------------------------------------------
+   OSM-Opt-in Platzhalter
+--------------------------------------------- */
+.bes-map-optin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  padding: 1.5rem;
+  text-align: center;
+  background: #f4f5f7;
+  font-size: 1rem;
+}
+
+.bes-map-optin p {
+  max-width: 36rem;
+  margin: 0;
+}

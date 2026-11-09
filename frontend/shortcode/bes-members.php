@@ -163,6 +163,17 @@ add_shortcode('bes_members', function ($atts) {
       $plugin_version,
       true
     );
+
+    wp_localize_script('bes-map-script', 'bes_map_optin', [
+      'enabled' => (bool) apply_filters('bes_map_optin_enabled', true),
+      'ttlDays' => 180,
+      'title' => esc_html__('Kartenansicht', 'besync'),
+      'text' => esc_html__('Für die Kartenansicht werden Kacheln von OpenStreetMap geladen. Dabei werden Ihre IP-Adresse und Browserdaten an die OpenStreetMap Foundation übertragen.', 'besync'),
+      'button' => esc_html__('Karte laden', 'besync'),
+      'remember' => esc_html__('Auswahl 6 Monate merken', 'besync'),
+      'privacy_label' => esc_html__('Datenschutzerklärung', 'besync'),
+      'privacy_url' => get_privacy_policy_url(),
+    ]);
   }
 
   // 🎨 Design-CSS einbinden (wenn Design-Einstellungen vorhanden)
