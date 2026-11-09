@@ -1597,13 +1597,136 @@ input:focus-visible {
   justify-content: center;
   gap: 0.75rem;
   box-sizing: border-box;
+  width: 100%;
+  height: 100%;
   padding: 1.5rem;
+  overflow: hidden;
   text-align: center;
-  background: #f4f5f7;
+  color: var(--bes-card-text-custom, var(--bes-text));
+  font-family: var(--font-sans);
   font-size: 1rem;
+  line-height: 1.5;
+  background-color: var(--expand-bg, var(--bes-bg-light));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 140' fill='none'%3E%3Cpath d='M8 96c32-48 64 28 104-16s62-28 112 18' stroke='%23F7A600' stroke-width='1.5'/%3E%3Cpath d='M8 112c40-28 72 24 120-8s64-22 104 16' stroke='%23F7A600' stroke-width='1'/%3E%3Ccircle cx='56' cy='78' r='2.5' fill='%23F7A600'/%3E%3Ccircle cx='112' cy='80' r='2.5' fill='%23F7A600'/%3E%3Ccircle cx='168' cy='64' r='2' fill='%23F7A600'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 125% auto;
+  border: 1px solid var(--bes-card-stripe-custom, var(--bes-yellow));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
 }
 
-.bes-map-optin p {
+.bes-map-optin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--expand-bg, var(--bes-bg-light));
+  opacity: 0.88;
+  pointer-events: none;
+}
+
+.bes-map-optin-title,
+.bes-map-optin-text,
+.bes-map-optin-button,
+.bes-map-optin-remember,
+.bes-map-optin-privacy {
+  position: relative;
+  z-index: 1;
   max-width: 36rem;
   margin: 0;
+}
+
+.bes-map-optin-title {
+  font-family: var(--font-serif);
+  font-size: 1.38rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--bes-card-text-custom, var(--bes-text));
+}
+
+.bes-map-optin-text {
+  color: var(--bes-text-muted);
+}
+
+.bes-map-optin-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.42rem 1.1rem;
+  border: 1px solid var(--bes-button-bg-custom, var(--bes-yellow));
+  border-radius: 100px;
+  background: var(--bes-button-bg-custom, var(--bes-yellow));
+  color: var(--bes-button-text-custom, var(--bes-text-black));
+  font-family: var(--font-sans);
+  font-size: 0.81rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background var(--bes-transition), border-color var(--bes-transition);
+}
+
+.bes-map-optin-button:hover {
+  background: var(--bes-button-bg-hover-custom, var(--bes-yellow-dark));
+  border-color: var(--bes-button-bg-hover-custom, var(--bes-yellow-dark));
+}
+
+.bes-map-optin-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  color: var(--bes-card-text-custom, var(--bes-text));
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.bes-map-optin-privacy {
+  color: var(--bes-card-text-custom, var(--bes-text));
+  text-underline-offset: 0.15em;
+}
+
+.bes-map-optin-button:focus-visible,
+.bes-map-optin-remember input:focus-visible,
+.bes-map-optin-privacy:focus-visible,
+.bes-map-optin-revoke:focus-visible {
+  outline: 3px solid var(--bes-focus);
+  outline-offset: 3px;
+}
+
+.bes-map-optin-revoke {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: none;
+  color: var(--bes-card-text-custom, var(--bes-text));
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.bes-map-optin-revoke[hidden] {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .bes-map-optin {
+    justify-content: flex-start;
+    padding: 0.75rem;
+    overflow: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bes-map-optin,
+  .bes-map-optin-button,
+  .bes-map-optin-revoke,
+  .bes-map-optin-privacy {
+    transition: none;
+  }
 }

@@ -173,6 +173,7 @@ add_shortcode('bes_members', function ($atts) {
       'remember' => esc_html__('Auswahl 6 Monate merken', 'besync'),
       'privacy_label' => esc_html__('Datenschutzerklärung', 'besync'),
       'privacy_url' => get_privacy_policy_url(),
+      'revoke' => __('Kartendienst deaktivieren', 'besync'),
     ]);
   }
 

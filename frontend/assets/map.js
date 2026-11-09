@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', function () {
       let tileLayer = null;
       let consentGranted = false;
       let optinOverlay = null;
+      let revokeButton = null;
 
       function loadTiles() {
         if (tilesLoaded && tileLayer) {
@@ -82,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function () {
           return;
         }
         tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
           maxZoom: 19,
         }).addTo(map);
         tilesLoaded = true;
@@ -137,6 +138,70 @@ document.addEventListener('DOMContentLoaded', function () {
           optinOverlay = null;
         }
 
+        function focusMap() {
+          try {
+            const mapEl = map.getContainer();
+            if (!mapEl.hasAttribute('tabindex')) {
+              mapEl.setAttribute('tabindex', '-1');
+            }
+            mapEl.focus({ preventScroll: true });
+          } catch (e) {
+            // Fokus bleibt, wo er ist.
+          }
+        }
+
+        function setRevokeVisible(visible) {
+          if (!revokeButton) {
+            return;
+          }
+          revokeButton.hidden = !visible;
+        }
+
+        function ensureRevokeButton() {
+          if (revokeButton) {
+            return;
+          }
+          const mapEl = document.getElementById('bes-members-map');
+          const host = mapEl ? mapEl.parentNode : null;
+          if (!mapEl || !host || !host.classList || !host.classList.contains('bes-map-container')) {
+            return;
+          }
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'bes-map-optin-revoke';
+          button.textContent = optin.revoke || 'Kartendienst deaktivieren';
+          button.hidden = true;
+          button.addEventListener('click', function () {
+            revokeTiles();
+          });
+          if (mapEl.nextSibling) {
+            host.insertBefore(button, mapEl.nextSibling);
+          } else {
+            host.appendChild(button);
+          }
+          revokeButton = button;
+        }
+
+        function revokeTiles() {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch (e) {
+            // Speicher gesperrt: die Sitzung wird trotzdem beendet.
+          }
+          try {
+            if (tileLayer) {
+              map.removeLayer(tileLayer);
+            }
+          } catch (e) {
+            // Layer hing nicht mehr an der Karte.
+          }
+          tileLayer = null;
+          tilesLoaded = false;
+          consentGranted = false;
+          setRevokeVisible(false);
+          showOverlay();
+        }
+
         function showOverlay() {
           if (optinOverlay) {
             return;
@@ -149,6 +214,8 @@ document.addEventListener('DOMContentLoaded', function () {
           overlay.style.position = 'absolute';
           overlay.style.inset = '0';
           overlay.style.zIndex = '10000';
+          overlay.setAttribute('role', 'region');
+          overlay.setAttribute('aria-label', optin.title || 'Kartenansicht');
 
           const title = document.createElement('p');
           title.className = 'bes-map-optin-title';
@@ -194,6 +261,10 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isMapVisible()) {
               loadTiles();
             }
+            setRevokeVisible(tilesLoaded);
+            if (tilesLoaded) {
+              focusMap();
+            }
           });
 
           map.getContainer().appendChild(overlay);
@@ -206,7 +277,10 @@ document.addEventListener('DOMContentLoaded', function () {
           }
           removeOverlay();
           loadTiles();
+          setRevokeVisible(tilesLoaded);
         }
+
+        ensureRevokeButton();
 
         consentGranted = readStoredConsent();
         if (consentGranted) {
