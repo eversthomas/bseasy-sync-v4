@@ -4,6 +4,13 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ---
 
+## [4.0.3] — in Arbeit (Datum beim Einspielen eintragen)
+
+### Datenschutz
+- **OpenStreetMap-Kacheln erst nach Zustimmung:** Die Karte lädt Kacheln von `tile.openstreetmap.org` nur noch nach Klick auf „Karte laden". Zustimmung optional für 6 Monate im Browser (`localStorage`, Schlüssel `bes_osm_tiles`), jederzeit widerrufbar über „Kartendienst deaktivieren". Notausgang: Filter `bes_map_optin_enabled` (Standard `true`).
+- **OSM-Attribution** mit Link auf `openstreetmap.org/copyright`.
+- **JSON-LD** wird mit Hex-Escaping ausgegeben (kein Ausbruch aus dem `<script>`-Block durch Sonderzeichen in Profilfeldern).
+
 ## [Unreleased]
 
 ### Entfernt
