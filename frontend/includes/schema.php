@@ -141,7 +141,7 @@ function bes_generate_member_schema_tag(array $member, string $name, $id, string
         $schema['knowsAbout'] = $knows_about;
     }
 
-    $json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    $json = json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     if (!$json) {
         return '';
     }
