@@ -497,6 +497,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Sammle Select-Filter
       selectFilters.forEach((select) => {
+        if (select.classList.contains('bes-radius-select')) {
+          return;
+        }
         const fieldId = select.getAttribute('data-field');
         const value = select.value;
         if (value) {

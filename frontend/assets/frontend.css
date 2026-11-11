@@ -1045,6 +1045,7 @@
   font-weight: 700;
   cursor: pointer;
   box-shadow: var(--bes-shadow-sm);
+  z-index: 1;
 }
 
 .bes-map-modal-close:hover {
