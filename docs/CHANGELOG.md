@@ -4,6 +4,21 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ---
 
+## [4.0.3] — in Arbeit (Datum beim Einspielen eintragen)
+
+### Datenschutz
+- **OpenStreetMap-Kacheln erst nach Zustimmung:** Die Karte lädt Kacheln von `tile.openstreetmap.org` nur noch nach Klick auf „Karte laden". Zustimmung optional für 6 Monate im Browser (`localStorage`, Schlüssel `bes_osm_tiles`), jederzeit widerrufbar über „Kartendienst deaktivieren". Notausgang: Filter `bes_map_optin_enabled` (Standard `true`).
+- **OSM-Attribution** mit Link auf `openstreetmap.org/copyright`.
+- **JSON-LD** wird mit Hex-Escaping ausgegeben (kein Ausbruch aus dem `<script>`-Block durch Sonderzeichen in Profilfeldern).
+- **AJAX-Filter** (`bes_filter_members`) durchsucht und liefert nur noch Geschäftsstadt und Geschäfts-PLZ statt der privaten Stadt.
+
+### Behoben
+- **Karten-Filter:** Jeder Filter ließ alle Marker verschwinden (die Umkreis-Auswahlen wurden fälschlich als Filter gezählt); auch „Zurücksetzen" half nicht.
+- **Suche auf der Karte:** Namen und Orte der Marker waren leer, die Suche nach Name oder Stadt fand nichts. Namen und Geschäftsstadt werden jetzt korrekt gelesen.
+- **Karten-Popup:** Der Schließen-Button war zur Hälfte von der Karte verdeckt.
+- **Karten-Filterleiste auf dem Handy:** Die Filterfelder standen alle untereinander in voller Breite; sie umbrechen jetzt kompakt wie in der Kachelansicht.
+- **Kalender-Karten:** Titel, Ortszeile und Link waren auf dem gelben Hintergrund schlecht lesbar (Theme-Farben überschrieben die Plugin-Farben, Link-Hover gelb auf gelb); sie sind jetzt dunkel und kontrastreich.
+
 ## [Unreleased]
 
 ### Entfernt

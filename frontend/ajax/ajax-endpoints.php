@@ -202,7 +202,7 @@ function bes_ajax_filter_members() {
             
             // Suche in Stadt
             if (!$found) {
-                $city = $get_field_value($member, 'contact.city') ?? '';
+                $city = $get_field_value($member, 'contact.companyCity') ?? '';
                 if ($city && strpos(call_user_func($to_lower, $city), $search_lower) !== false) {
                     $found = true;
                 }
@@ -338,8 +338,8 @@ function bes_ajax_filter_members() {
     foreach ($paginated as $member) {
         $firstName = $get_field_value($member, 'contact.firstName') ?? $get_field_value($member, 'member.firstName') ?? '';
         $familyName = $get_field_value($member, 'contact.familyName') ?? $get_field_value($member, 'member.familyName') ?? '';
-        $city = $get_field_value($member, 'contact.city') ?? '';
-        $zip = $get_field_value($member, 'contact.zip') ?? '';
+        $city = $get_field_value($member, 'contact.companyCity') ?? '';
+        $zip = $get_field_value($member, 'contact.companyZip') ?? '';
         
         $response_members[] = [
             'id' => intval($get_field_value($member, 'member.id') ?? $member['id'] ?? 0),

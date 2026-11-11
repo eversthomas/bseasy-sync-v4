@@ -62,16 +62,250 @@ document.addEventListener('DOMContentLoaded', function () {
     // ======================================
     const mapSettings = data.mapSettings;
     console.log('E2T Map: Settings -', mapSettings);
-    const map = L.map('bes-members-map').setView(mapSettings.center, mapSettings.zoom);
+    const map = L.map('bes-members-map', { maxZoom: 19 }).setView(mapSettings.center, mapSettings.zoom);
     console.log('E2T Map: Karte initialisiert');
 
     // Speichere Map-Instanz global für Toggle-Funktionalität
     window.besMapInstance = map;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
+    // Kacheln erst nach Zustimmung und nur bei sichtbarer Karte.
+    // Fehler hier lassen Marker, Filter und Popups unberührt.
+    try {
+      let tilesLoaded = false;
+      let tileLayer = null;
+      let consentGranted = false;
+      let optinOverlay = null;
+      let revokeButton = null;
+
+      function loadTiles() {
+        if (tilesLoaded && tileLayer) {
+          map.invalidateSize();
+          return;
+        }
+        tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+        }).addTo(map);
+        tilesLoaded = true;
+        map.invalidateSize();
+      }
+
+      function isMapVisible() {
+        const el = map.getContainer();
+        return el.offsetWidth > 0 && el.offsetHeight > 0;
+      }
+
+      const optin = window.bes_map_optin || {};
+      // wp_localize_script macht aus false einen leeren String.
+      const optinDisabled = optin.enabled === false
+        || optin.enabled === 0
+        || optin.enabled === '0'
+        || optin.enabled === ''
+        || optin.enabled === 'false';
+
+      if (optinDisabled) {
+        loadTiles();
+      } else {
+        const storageKey = 'bes_osm_tiles';
+        const ttlDays = parseInt(optin.ttlDays, 10) || 180;
+
+        function readStoredConsent() {
+          try {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) {
+              return false;
+            }
+            const parsed = JSON.parse(raw);
+            return !!(parsed && typeof parsed.exp === 'number' && parsed.exp > Date.now());
+          } catch (e) {
+            return false;
+          }
+        }
+
+        function writeStoredConsent() {
+          try {
+            const exp = Date.now() + ttlDays * 24 * 60 * 60 * 1000;
+            localStorage.setItem(storageKey, JSON.stringify({ exp: exp }));
+          } catch (e) {
+            // Gesperrter Speicher: Zustimmung gilt nur für diesen Seitenaufruf.
+          }
+        }
+
+        function removeOverlay() {
+          if (optinOverlay && optinOverlay.parentNode) {
+            optinOverlay.parentNode.removeChild(optinOverlay);
+          }
+          optinOverlay = null;
+        }
+
+        function focusMap() {
+          try {
+            const mapEl = map.getContainer();
+            if (!mapEl.hasAttribute('tabindex')) {
+              mapEl.setAttribute('tabindex', '-1');
+            }
+            mapEl.focus({ preventScroll: true });
+          } catch (e) {
+            // Fokus bleibt, wo er ist.
+          }
+        }
+
+        function setRevokeVisible(visible) {
+          if (!revokeButton) {
+            return;
+          }
+          revokeButton.hidden = !visible;
+        }
+
+        function ensureRevokeButton() {
+          if (revokeButton) {
+            return;
+          }
+          const mapEl = document.getElementById('bes-members-map');
+          const host = mapEl ? mapEl.parentNode : null;
+          if (!mapEl || !host || !host.classList || !host.classList.contains('bes-map-container')) {
+            return;
+          }
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'bes-map-optin-revoke';
+          button.textContent = optin.revoke || 'Kartendienst deaktivieren';
+          button.hidden = true;
+          button.addEventListener('click', function () {
+            revokeTiles();
+          });
+          if (mapEl.nextSibling) {
+            host.insertBefore(button, mapEl.nextSibling);
+          } else {
+            host.appendChild(button);
+          }
+          revokeButton = button;
+        }
+
+        function revokeTiles() {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch (e) {
+            // Speicher gesperrt: die Sitzung wird trotzdem beendet.
+          }
+          try {
+            if (tileLayer) {
+              map.removeLayer(tileLayer);
+            }
+          } catch (e) {
+            // Layer hing nicht mehr an der Karte.
+          }
+          tileLayer = null;
+          tilesLoaded = false;
+          consentGranted = false;
+          setRevokeVisible(false);
+          showOverlay();
+        }
+
+        function showOverlay() {
+          if (optinOverlay) {
+            return;
+          }
+
+          const overlay = document.createElement('div');
+          L.DomEvent.disableClickPropagation(overlay);
+          L.DomEvent.disableScrollPropagation(overlay);
+          overlay.className = 'bes-map-optin';
+          overlay.style.position = 'absolute';
+          overlay.style.inset = '0';
+          overlay.style.zIndex = '10000';
+          overlay.setAttribute('role', 'region');
+          overlay.setAttribute('aria-label', optin.title || 'Kartenansicht');
+
+          const title = document.createElement('p');
+          title.className = 'bes-map-optin-title';
+          title.textContent = optin.title || 'Kartenansicht';
+
+          const text = document.createElement('p');
+          text.className = 'bes-map-optin-text';
+          text.textContent = optin.text || '';
+
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'bes-map-optin-button';
+          button.textContent = optin.button || 'Karte laden';
+
+          const label = document.createElement('label');
+          label.className = 'bes-map-optin-remember';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(' ' + (optin.remember || 'Auswahl 6 Monate merken')));
+
+          overlay.appendChild(title);
+          overlay.appendChild(text);
+          overlay.appendChild(button);
+          overlay.appendChild(label);
+
+          if (optin.privacy_url) {
+            const link = document.createElement('a');
+            link.className = 'bes-map-optin-privacy';
+            link.href = optin.privacy_url;
+            link.textContent = optin.privacy_label || 'Datenschutzerklärung';
+            overlay.appendChild(link);
+          }
+
+          button.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            consentGranted = true;
+            if (checkbox.checked) {
+              writeStoredConsent();
+            }
+            removeOverlay();
+            if (isMapVisible()) {
+              loadTiles();
+            }
+            setRevokeVisible(tilesLoaded);
+            if (tilesLoaded) {
+              focusMap();
+            }
+          });
+
+          map.getContainer().appendChild(overlay);
+          optinOverlay = overlay;
+        }
+
+        function maybeLoadTiles() {
+          if (!consentGranted || !isMapVisible()) {
+            return;
+          }
+          removeOverlay();
+          loadTiles();
+          setRevokeVisible(tilesLoaded);
+        }
+
+        ensureRevokeButton();
+
+        consentGranted = readStoredConsent();
+        if (consentGranted) {
+          maybeLoadTiles();
+        } else {
+          showOverlay();
+        }
+
+        if (typeof ResizeObserver !== 'undefined') {
+          const resizeObserver = new ResizeObserver(function () {
+            maybeLoadTiles();
+          });
+          resizeObserver.observe(document.getElementById('bes-members-map'));
+        }
+
+        const toggleMapButton = document.querySelector('.bes-toggle-map');
+        if (toggleMapButton) {
+          toggleMapButton.addEventListener('click', function () {
+            window.setTimeout(maybeLoadTiles, 150);
+          });
+        }
+      }
+    } catch (optinError) {
+      // Karte ohne Kacheln weiterlaufen lassen.
+    }
 
     // ======================================
     // 2. Marker und Filtering vorbereiten
@@ -263,6 +497,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Sammle Select-Filter
       selectFilters.forEach((select) => {
+        if (select.classList.contains('bes-radius-select')) {
+          return;
+        }
         const fieldId = select.getAttribute('data-field');
         const value = select.value;
         if (value) {
