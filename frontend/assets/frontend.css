@@ -1456,6 +1456,22 @@
   color: var(--bes-yellow-dark);
 }
 
+.bes-calendar .bes-event-card .bes-event-title {
+  color: var(--bes-text);
+}
+
+.bes-calendar .bes-event-card .bes-event-location {
+  color: var(--bes-text);
+}
+
+.bes-calendar .bes-event-card a.bes-event-link {
+  color: var(--bes-text);
+}
+
+.bes-calendar .bes-event-card a.bes-event-link:hover {
+  color: var(--bes-text-black);
+}
+
 /* Event-Tag */
 .bes-event-tag {
   position: absolute;
