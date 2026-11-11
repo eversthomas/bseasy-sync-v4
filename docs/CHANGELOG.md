@@ -16,6 +16,8 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 - **Karten-Filter:** Jeder Filter ließ alle Marker verschwinden (die Umkreis-Auswahlen wurden fälschlich als Filter gezählt); auch „Zurücksetzen" half nicht.
 - **Suche auf der Karte:** Namen und Orte der Marker waren leer, die Suche nach Name oder Stadt fand nichts. Namen und Geschäftsstadt werden jetzt korrekt gelesen.
 - **Karten-Popup:** Der Schließen-Button war zur Hälfte von der Karte verdeckt.
+- **Karten-Filterleiste auf dem Handy:** Die Filterfelder standen alle untereinander in voller Breite; sie umbrechen jetzt kompakt wie in der Kachelansicht.
+- **Kalender-Karten:** Titel, Ortszeile und Link waren auf dem gelben Hintergrund schlecht lesbar (Theme-Farben überschrieben die Plugin-Farben, Link-Hover gelb auf gelb); sie sind jetzt dunkel und kontrastreich.
 
 ## [Unreleased]
 
