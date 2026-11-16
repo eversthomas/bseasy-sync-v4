@@ -28,6 +28,7 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ### Datenschutz
 - **Positivliste im Sync:** Für Kontaktdaten werden nur noch Namen, Geschäftsfelder und Koordinaten gespeichert. Private Felder (z. B. `city`, `country`, `zip`, `street`, private E-Mail, Telefon, Geburtstag) werden verworfen, auch wenn sie im Backend ausgewählt sind. Wirkt ab dem nächsten Vollsync.
+- **Private Custom Fields gesperrt:** „Straße/PLZ/Stadt persönlich" (`cf.395501031`, `cf.395500980`, `cf.395501019`) werden nie gespeichert (erweiterbar per Filter `bes_blocked_private_custom_fields`).
 - **Frontend:** Private PLZ-/Stadt-Schlüssel entfernt (Umkreissuche, Karten-Marker).
 
 ## [Unreleased]

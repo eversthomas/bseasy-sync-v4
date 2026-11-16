@@ -914,6 +914,22 @@ function bes_is_allowed_contact_field(string $field_key): bool {
 }
 
 /**
+ * Custom Fields mit privater Adresse ("Straße/PLZ/Stadt persönlich") werden nie gespeichert.
+ * Per Filter `bes_blocked_private_custom_fields` erweiterbar (Liste numerischer CF-IDs).
+ *
+ * @param string $field_key z. B. "cf.395501031" oder "contactcf.395501031"
+ * @return bool
+ */
+function bes_is_blocked_private_custom_field(string $field_key): bool {
+    $blocked = [395501031, 395500980, 395501019];
+    if (function_exists('apply_filters')) {
+        $blocked = (array) apply_filters('bes_blocked_private_custom_fields', $blocked);
+    }
+    $cf_id = (int) preg_replace('/^(?:contactcf|cf)\./', '', $field_key);
+    return $cf_id > 0 && in_array($cf_id, array_map('intval', $blocked), true);
+}
+
+/**
  * Extrahiert nur ausgewählte Felder
  */
 function bseasy_v3_extract_selected_fields(
@@ -950,6 +966,9 @@ function bseasy_v3_extract_selected_fields(
         
         // Custom Fields: cf.* oder contactcf.*
         if (strpos($field_key, 'cf.') === 0 || strpos($field_key, 'contactcf.') === 0) {
+            if (bes_is_blocked_private_custom_field($field_key)) {
+                continue;
+            }
             // Extrahiere CF-ID
             $cf_id = (int)str_replace(['cf.', 'contactcf.'], '', $field_key);
             
