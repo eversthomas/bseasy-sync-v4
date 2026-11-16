@@ -15,6 +15,8 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 ### Sicherheit
 - **Datenordner geschützt:** Das Plugin legt in `uploads/bseasy-sync/` automatisch eine `.htaccess` (Apache) und eine leere `index.html` an, damit `sync.log` und `fields-config.json` nicht per URL abrufbar sind. Der Unterordner `img/` (Mitgliederbilder) bleibt abrufbar. Unter Nginx ist zusätzlich eine Serverregel nötig.
 
+- **`sync.log` nur noch bei Bedarf:** Die Datei wird ohne `WP_DEBUG` nur noch für Warnungen und Fehler geschrieben (bisher bei jedem Sync mit allen Meldungen).
+
 ### Behoben
 - **Karten-Filter:** Jeder Filter ließ alle Marker verschwinden (die Umkreis-Auswahlen wurden fälschlich als Filter gezählt); auch „Zurücksetzen" half nicht.
 - **Suche auf der Karte:** Namen und Orte der Marker waren leer, die Suche nach Name oder Stadt fand nichts. Namen und Geschäftsstadt werden jetzt korrekt gelesen.

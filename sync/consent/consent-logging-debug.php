@@ -23,6 +23,13 @@ function bes_consent_log(string $msg, string $level = 'INFO'): void
 {
     // Nutze das zentrale Debug-System für WordPress-Log
     bes_debug_log($msg, $level, 'CONSENT');
+
+    // sync.log nur schreiben, wenn WP_DEBUG aktiv ist oder es sich um WARN/ERROR handelt
+    // (gleiche Regel wie bes_debug_log). In Produktion entsteht so keine wachsende Log-Datei.
+    $debug_on = defined('BES_DEBUG_MODE') && BES_DEBUG_MODE;
+    if (!$debug_on && !in_array($level, ['ERROR', 'WARN'], true)) {
+        return;
+    }
     
     // Zusätzlich in Sync-Log-Datei schreiben (für Sync-spezifische Logs)
     // Pfad-Validierung für BES_DATA
