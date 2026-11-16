@@ -14,7 +14,23 @@ Die Einwilligungen der Mitglieder (Profildaten, Adressen) liegen vor. Es geht au
 
 ---
 
-## Umsetzungsstand (Branch `privacy/osm-optin`, Version 4.0.3)
+## Umsetzungsstand 4.0.4 (Stand 16.11.2026)
+
+Version 4.0.3 ist live (Opt-in, JSON-LD, AJAX-Filter, Datenordner geschützt, `info.php` gelöscht, `sync.log` nur noch Warnungen/Fehler). Version 4.0.4 (Branch `claude/privacy-4-0-4`, nach `master` gemergt):
+
+| Maßnahme | Status |
+|----------|--------|
+| Positivliste im Sync: nur Name und Geschäftsfelder werden gespeichert, private Kontaktfelder werden verworfen | umgesetzt, auf Subdomain bestätigt |
+| Private Custom Fields „Straße/PLZ/Stadt persönlich" (`cf.395501031`, `cf.395500980`, `cf.395501019`) werden nie gespeichert | umgesetzt |
+| Pins ausschließlich aus der Geschäftsadresse (Nominatim, Cache, 1 Anfrage/Sekunde); EasyVerein-Koordinaten werden nicht übernommen | umgesetzt, auf Subdomain bestätigt (159 Pins) |
+| Private PLZ-/Stadt-Schlüssel im Frontend entfernt | umgesetzt |
+| Backend-Labels („Geschäftlich: …", „Privat: … (wird nicht übernommen)") | umgesetzt |
+| Offen: Datenschutzerklärung der Seite ergänzen, Mitglieder informieren (durch Dritte), Live-Update mit Vollsync | offen |
+| Offen (später): Sync-Abfrage auf Feldliste beschränken (private Felder gar nicht erst abrufen), Log außerhalb des Webverzeichnisses, `uninstall.php` | offen |
+
+**Auswirkung auf diese Analyse:** Der Befund „Mitgliederadressen sind nie an OSM gegangen" (Abschnitt 3) gilt ab 4.0.4 nicht mehr: Die **Geschäftsadressen** der Mitglieder mit Einwilligung werden beim Sync an Nominatim übermittelt (Textbaustein in Abschnitt 9 angepasst). Offene Frage 4 (Adresse hinter `geoPositionCoords`) ist erledigt: Die Koordinaten werden nicht mehr verwendet.
+
+## Umsetzungsstand 4.0.3 (Branch `privacy/osm-optin`)
 
 Vorgehen: minimal-invasiv, nur die datenschutzrechtlich nötigen Änderungen; Details in [UMSETZUNGSPLAN-DATENSCHUTZ.md](UMSETZUNGSPLAN-DATENSCHUTZ.md). Live noch **nicht** eingespielt (Stand 10.11.2026).
 
@@ -210,8 +226,9 @@ Offen bleibt, **welche Adresse EasyVerein für `geoPositionCoords` verwendet** (
 ## 9. Textbausteine für die Datenschutzerklärung (Stichpunkte)
 
 - **OpenStreetMap-Karte:** Anbieter OpenStreetMap Foundation, St John’s Innovation Centre, Cowley Road, Cambridge CB4 0WS, UK. Übermittelt werden IP-Adresse und Browserdaten erst nach Klick auf „Karte laden". Rechtsgrundlage Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), Widerruf jederzeit.
+- **Pins auf der Karte (Sync):** Die Geschäftsadressen (Straße, PLZ, Ort, Land) der Mitglieder mit Einwilligung werden vom Server beim Sync an Nominatim (OSM) übermittelt, um Koordinaten zu berechnen. Die Ergebnisse werden dauerhaft pro Adresse gespeichert. Private Adressen werden weder gespeichert noch übermittelt. Dieselben Geschäftsadressen sind öffentlich auf der Seite sichtbar. Rechtsgrundlage: Einwilligung der Mitglieder bzw. berechtigtes Interesse des Betreibers; Details nach eigener Prüfung.
 - **Umkreissuche:** Eingegebene PLZ/Ort wird zur Standortbestimmung serverseitig an Nominatim (OSM) übermittelt und 7 Tage zwischengespeichert. Die IP-Adresse des Besuchers wird nicht übertragen.
-- **Mitgliederprofile:** Veröffentlichung auf Grundlage der Einwilligung der Mitglieder in EasyVerein. Adressen werden nicht an Dritte zur Geocodierung übertragen (nach Entfernung des Sync-Pfads).
+- **Mitgliederprofile:** Veröffentlichung auf Grundlage der Einwilligung der Mitglieder in EasyVerein. Es werden nur Name und Geschäftsadresse gespeichert, keine privaten Daten. Zur Geocodierung der Geschäftsadresse siehe oben.
 - **Cookies:** Keine. Nach Abschalten des Emoji-Skripts auch kein `sessionStorage`-Eintrag.
 
 ---
@@ -220,8 +237,8 @@ Offen bleibt, **welche Adresse EasyVerein für `geoPositionCoords` verwendet** (
 
 1. Eigenes Opt-in (Option B) oder externer CMP? Empfehlung B, solange keine Cookies gesetzt werden.
 2. Emoji-Option im Plugin: beschlossen (Standard aus); Hinweistext und Platz im Admin festlegen.
-3. Nominatim im Sync: Variante A (entfernen) empfohlen; Variante B (reparieren, nur Geschäftsadresse) nur bei fachlichem Bedarf.
-4. Welche Adresse nutzt EasyVerein für `geoPositionCoords`?
+3. Nominatim im Sync: **entschieden und umgesetzt (4.0.4)** – Variante B, nur Geschäftsadresse, mit Cache.
+4. ~~Welche Adresse nutzt EasyVerein für `geoPositionCoords`?~~ Erledigt: Koordinaten aus EasyVerein werden nicht mehr verwendet.
 5. Liefert der Webserver `sync.log` und `fields-config.json` nur wegen fehlender Serverregeln aus? Welche Server-Software (Apache/Nginx) und PHP-Version laufen produktiv?
 6. Welche Bildformate liegen unter `uploads/bseasy-sync/img/`?
 7. Elementor-Formular: Speicherung und Löschfrist klären.

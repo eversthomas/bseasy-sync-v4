@@ -4,7 +4,7 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 
 ---
 
-## [4.0.3] — in Arbeit (Datum beim Einspielen eintragen)
+## [4.0.3] — November 2026
 
 ### Datenschutz
 - **OpenStreetMap-Kacheln erst nach Zustimmung:** Die Karte lädt Kacheln von `tile.openstreetmap.org` nur noch nach Klick auf „Karte laden". Zustimmung optional für 6 Monate im Browser (`localStorage`, Schlüssel `bes_osm_tiles`), jederzeit widerrufbar über „Kartendienst deaktivieren". Notausgang: Filter `bes_map_optin_enabled` (Standard `true`).
@@ -24,7 +24,7 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 - **Karten-Filterleiste auf dem Handy:** Die Filterfelder standen alle untereinander in voller Breite; sie umbrechen jetzt kompakt wie in der Kachelansicht.
 - **Kalender-Karten:** Titel, Ortszeile und Link waren auf dem gelben Hintergrund schlecht lesbar (Theme-Farben überschrieben die Plugin-Farben, Link-Hover gelb auf gelb); sie sind jetzt dunkel und kontrastreich.
 
-## [4.0.4] — in Arbeit
+## [4.0.4] — 2026-11-16 (Datum beim Einspielen prüfen)
 
 ### Datenschutz
 - **Positivliste im Sync:** Für Kontaktdaten werden nur noch Namen, Geschäftsfelder und Koordinaten gespeichert. Private Felder (z. B. `city`, `country`, `zip`, `street`, private E-Mail, Telefon, Geburtstag) werden verworfen, auch wenn sie im Backend ausgewählt sind. Wirkt ab dem nächsten Vollsync.

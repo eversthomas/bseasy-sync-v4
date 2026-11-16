@@ -22,6 +22,8 @@
 | [BACKLOG.md](BACKLOG.md) | Priorisierte Aufgabenliste (P0–P3) |
 | [**SYNC_PLAN.md**](SYNC_PLAN.md) | **Sync-Umsetzungsplan** (Reihenfolge, Messwerte, Auto-Sync, Kontext für neuen Chat) |
 | [CHANGELOG.md](CHANGELOG.md) | Versionshistorie |
+| [DATENSCHUTZ-OPTIMIERUNG.md](DATENSCHUTZ-OPTIMIERUNG.md) | Datenschutz-Analyse, Umsetzungsstand 4.0.3/4.0.4, Textbausteine für die Datenschutzerklärung |
+| [UMSETZUNGSPLAN-DATENSCHUTZ.md](UMSETZUNGSPLAN-DATENSCHUTZ.md), [UMSETZUNGSPLAN-PRIVATE-DATEN.md](UMSETZUNGSPLAN-PRIVATE-DATEN.md) | Umsetzungspläne 4.0.3 und 4.0.4 |
 | [../dev/ROADMAP.md](../dev/ROADMAP.md) | Detaillierte technische Roadmap (A–J) |
 
 ---

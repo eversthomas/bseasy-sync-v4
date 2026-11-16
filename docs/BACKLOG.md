@@ -113,6 +113,8 @@ Lab-Referenz (5 Member): baseline 4,6 vs. optimized 2,6 Requests/Member.
 | 21 | Performance & Caching | `frontend/` | ROADMAP F |
 | 22 | Sicherheits-Audit | alle | ROADMAP I |
 | 23 | PHPUnit / Namespaces | alle | ROADMAP J |
+| 24 | Sync-Abfrage auf Feldliste beschränken (private Felder gar nicht erst abrufen) | `sync/` | Datenschutz, zusammen mit #6 |
+| 25 | Log-Datei außerhalb des Webverzeichnisses, `uninstall.php` | `includes/`, `bootstrap/` | DATENSCHUTZ-OPTIMIERUNG.md |
 
 ---
 
@@ -120,6 +122,7 @@ Lab-Referenz (5 Member): baseline 4,6 vs. optimized 2,6 Requests/Member.
 
 | Task | Datum | Details |
 |------|-------|---------|
+| **Datenschutz 4.0.3/4.0.4** (OSM-Opt-in, Positivliste, Pins aus Geschäftsadresse, Backend-Labels, Datenordner geschützt) | 2026-11 | siehe `DATENSCHUTZ-OPTIMIERUNG.md` |
 | **Sync-Dauer-Anzeige** (Admin + Sync-Tab) | 2026-06 | `v3-persistence.php`, `sync-controller.js` |
 | **Sync-Lab** (isoliertes CLI) | 2026-06 | `dev/sync-lab/` |
 | Admin-Module nur unter `is_admin()` | 2026-05-24 | ~1.850 LOC weniger auf Frontend |

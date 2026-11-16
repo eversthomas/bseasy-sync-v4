@@ -4,7 +4,7 @@
 
 **EN:** WordPress plugin to synchronise EasyVerein member data (API v2.0) and display consultant/member cards on the frontend — including filters, map view, radius search, and a tile/map toggle.
 
-**Version:** 4.0.3  
+**Version:** 4.0.4  
 **Text Domain:** `besync`  
 **Repository:** [github.com/eversthomas/bseasy-sync-v4](https://github.com/eversthomas/bseasy-sync-v4)
 
@@ -134,7 +134,8 @@ Dieses Plugin synchronisiert **nur Daten, die in EasyVerein für die Veröffentl
 
 **Gespeicherte Daten (lokal auf Ihrem Server):**
 
-- synchronisierte Mitgliederdaten in `wp-content/uploads/bseasy-sync/`
+- synchronisierte Mitgliederdaten in `wp-content/uploads/bseasy-sync/` (der Ordner wird per `.htaccess` vor direktem Abruf geschützt; unter Nginx ist zusätzlich eine Serverregel nötig). **Keine privaten Daten:** Für Kontakte werden nur Name und Geschäftsadresse gespeichert; private Adresse, private E-Mail, Telefon und Geburtsdatum werden verworfen, auch wenn sie im Backend ausgewählt sind. Die Koordinaten der Karten-Pins stammen ausschließlich aus der Geschäftsadresse, nicht aus EasyVerein-Koordinaten.
+- Adress-Cache für die Pins (WordPress-Option `bes_geocode_cache`, Geschäftsadresse → Koordinaten)
 - Feld-Konfiguration, Sync-Status und Design-Einstellungen
 - API-Token (verschlüsselt in der WordPress-Datenbank)
 
@@ -142,7 +143,8 @@ Dieses Plugin synchronisiert **nur Daten, die in EasyVerein für die Veröffentl
 
 - **EasyVerein API** — Abruf der Mitgliederdaten
 - **OpenStreetMap-Kacheln (tile.openstreetmap.org)** — Kartenhintergrund der Karten-Ansicht; wird erst nach Zustimmung des Besuchers geladen (Klick auf „Karte laden"). Dabei erhält die OpenStreetMap Foundation IP-Adresse und Browserdaten des Besuchers. Die Zustimmung kann im Browser (`localStorage`, `bes_osm_tiles`) für 6 Monate gespeichert und jederzeit widerrufen werden. Das Plugin setzt keine Cookies. Mit `add_filter('bes_map_optin_enabled', '__return_false');` lässt sich das Opt-in abschalten (dann werden Kacheln sofort geladen; Einwilligung dann anderweitig einholen).
-- **OpenStreetMap Nominatim** — Geocoding für die Umkreissuche (Suchanfragen werden an `nominatim.openstreetmap.org` übermittelt; Ergebnisse werden temporär gecacht)
+- **OpenStreetMap Nominatim (Sync)** — Beim Sync werden die **Geschäftsadressen** (Straße, PLZ, Ort, Land) der Mitglieder mit Einwilligung an `nominatim.openstreetmap.org` übermittelt, um die Pins zu berechnen. Ergebnisse werden dauerhaft pro Adresse gecacht, nur neue oder geänderte Adressen werden erneut angefragt. Mitglieder ohne Geschäftsadresse erhalten keinen Pin. Dieselben Adressen stehen ohnehin öffentlich auf der Seite.
+- **OpenStreetMap Nominatim (Umkreissuche)** — Geocoding der Sucheingabe (PLZ/Ort) für die Umkreissuche (Anfragen gehen vom Server an `nominatim.openstreetmap.org`, ohne IP-Adresse des Besuchers; Ergebnisse werden temporär gecacht)
 
 Der Plugin-Autor stellt die Software bereit; die **rechtliche Verantwortung für den Einsatz** auf Ihrer Website liegt beim Seitenbetreiber.
 
@@ -154,7 +156,8 @@ This plugin synchronises **only data that members have approved for publication 
 
 **Data stored locally on your server:**
 
-- synchronised member data in `wp-content/uploads/bseasy-sync/`
+- synchronised member data in `wp-content/uploads/bseasy-sync/` (the folder is protected against direct access via `.htaccess`; on Nginx an additional server rule is required). **No private data:** only name and business address are stored for contacts; private address, private email, phone and date of birth are discarded even if selected in the backend. Map pin coordinates are derived solely from the business address, not from EasyVerein coordinates.
+- address cache for the pins (WordPress option `bes_geocode_cache`, business address → coordinates)
 - field configuration, sync status, and design settings
 - API token (encrypted in the WordPress database)
 
@@ -162,7 +165,8 @@ This plugin synchronises **only data that members have approved for publication 
 
 - **EasyVerein API** — retrieval of member data
 - **OpenStreetMap tiles (tile.openstreetmap.org)** — map background of the map view; loaded only after the visitor's consent (click on "Load map"). The OpenStreetMap Foundation then receives the visitor's IP address and browser data. Consent can be stored in the browser (`localStorage`, `bes_osm_tiles`) for 6 months and revoked at any time. The plugin sets no cookies. `add_filter('bes_map_optin_enabled', '__return_false');` disables the opt-in (tiles then load immediately; obtain consent by other means).
-- **OpenStreetMap Nominatim** — geocoding for radius search (queries are sent to `nominatim.openstreetmap.org`; results are temporarily cached)
+- **OpenStreetMap Nominatim (sync)** — during the sync, the **business addresses** (street, postcode, city, country) of consenting members are sent to `nominatim.openstreetmap.org` to compute the map pins. Results are cached permanently per address; only new or changed addresses are requested again. Members without a business address get no pin. The same addresses are published on the site anyway.
+- **OpenStreetMap Nominatim (radius search)** — geocoding of the search input (postcode/city) for the radius search (requests are made server-side, without the visitor's IP address; results are temporarily cached)
 
 The plugin author provides the software; **legal responsibility for deployment** on your website lies with the site operator.
 

@@ -3,6 +3,10 @@
 **Stand:** 11.11.2026 · Ergänzt [UMSETZUNGSPLAN-DATENSCHUTZ.md](UMSETZUNGSPLAN-DATENSCHUTZ.md) (Version 4.0.3) um die Folgearbeit (Version 4.0.4).
 Arbeitsweise unverändert: Cursor setzt einen Schritt um, Claude prüft den Diff, Thomas testet lokal und committet. Ein Schritt = ein Auftrag = ein Commit, Branch `privacy/osm-optin` (für 4.0.4 ein neuer Branch).
 
+## Status (16.11.2026)
+
+Schritt A (in 4.0.3), B, C, D und E sind umgesetzt (Branch `claude/privacy-4-0-4`, nach `master` gemergt). Abweichungen vom Plan: Zusätzlich sind die drei privaten Custom Fields („… persönlich") gesperrt; der Sync speichert keine Koordinaten aus EasyVerein; ein Vergleichsbericht `v3/geocode_report.json` (ohne Koordinaten) wurde ergänzt. Offen: Schritt F (Live-Update, Vollsync, Seitencache leeren; Mitglieder informiert Dritte).
+
 ## Entscheidungen (Thomas, 11.11.2026)
 
 1. Das Plugin soll **keine privaten Mitgliederdaten** mehr verwenden oder speichern. Der Sync wird dafür **nicht umgebaut**.
