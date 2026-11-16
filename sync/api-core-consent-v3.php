@@ -884,6 +884,36 @@ function bseasy_v3_get_path_value(array $data, string $path) {
 }
 
 /**
+ * Positivliste für Contact-Felder (Datenschutz: keine privaten Mitgliederdaten speichern).
+ *
+ * Erlaubt sind nur Namens- und Geschäftsfelder sowie die Koordinaten (Pins).
+ * Alles andere (z. B. city, zip, street, country, private E-Mail, Telefon, Geburtstag)
+ * wird nicht gespeichert, auch wenn es im Backend ausgewählt ist.
+ * Custom Fields (cf.*, contactcf.*) und member.* werden hier nicht geprüft.
+ *
+ * @param string $field_key Feldschlüssel, z. B. "contact.companyCity" oder "contact.contact.companyCity"
+ * @return bool
+ */
+function bes_is_allowed_contact_field(string $field_key): bool {
+    // Führende "contact."-Präfixe entfernen (Schreibweise variiert zwischen Auswahl und Config-ID)
+    $name = preg_replace('/^(contact\.)+/', '', $field_key);
+
+    static $allowed = [
+        'firstName', 'familyName', 'nameAffix',
+        'companyName', 'companyStreet', 'companyZip', 'companyCity',
+        'companyState', 'companyCountry', 'company_country_code_invoice',
+        'companyEmail',
+    ];
+
+    if (in_array($name, $allowed, true)) {
+        return true;
+    }
+
+    // Koordinaten (Pins) bleiben bis zur Umstellung auf Geschäftsadress-Geocoding unverändert
+    return $name === 'geoPositionCoords' || strpos($name, 'geoPositionCoords.') === 0;
+}
+
+/**
  * Extrahiert nur ausgewählte Felder
  */
 function bseasy_v3_extract_selected_fields(
@@ -941,6 +971,11 @@ function bseasy_v3_extract_selected_fields(
                 }
             }
         } else {
+            // Datenschutz: Contact-Felder nur aus der Positivliste übernehmen
+            if ($type === 'contact' && !bes_is_allowed_contact_field($field_key)) {
+                continue;
+            }
+
             // Standard-Feld (kann verschachtelt sein)
             $field_name = str_replace($type . '.', '', $field_key);
             

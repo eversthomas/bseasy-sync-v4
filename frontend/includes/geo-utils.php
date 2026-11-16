@@ -106,7 +106,7 @@ function bes_member_collect_zip_values(array $member): array
 {
     $out = [];
     // Root: teils flach aus älteren Exporten (z. B. contact.companyZip auf oberster Ebene)
-    $flat_keys = ['contact.companyZip', 'contact.zip'];
+    $flat_keys = ['contact.companyZip'];
     foreach ($flat_keys as $k) {
         if (isset($member[$k]) && $member[$k] !== '' && (is_string($member[$k]) || is_numeric($member[$k]))) {
             $out[] = (string) $member[$k];
@@ -115,7 +115,7 @@ function bes_member_collect_zip_values(array $member): array
     // V3-Consent / EasyVerein: verschachteltes contact-Objekt nutzt dieselben Feld-IDs als Keys
     // (z. B. "contact.companyZip" — nicht nur "companyZip").
     if (!empty($member['contact']) && is_array($member['contact'])) {
-        $nested_keys = ['contact.companyZip', 'contact.zip', 'companyZip', 'zip', 'postalCode'];
+        $nested_keys = ['contact.companyZip', 'companyZip'];
         foreach ($nested_keys as $sub) {
             if (!array_key_exists($sub, $member['contact'])) {
                 continue;

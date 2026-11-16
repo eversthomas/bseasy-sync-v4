@@ -127,7 +127,7 @@ $map_center_lng = floatval(get_option('bes_map_center_lng', 10.4515));
                         <p class="description" style="margin-top: 10px;">
                             <strong>Empfohlene Filterfelder:</strong>
                             <ul style="margin: 5px 0 0 20px;">
-                                <li>Stadt (contact.city)</li>
+                                <li>Geschäftsstadt (contact.companyCity)</li>
                                 <li>Methoden (customField 50697357)</li>
                             </ul>
                         </p>

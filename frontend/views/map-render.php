@@ -471,16 +471,14 @@ function bes_render_members_map(): string
             $name = trim(($contact['contact.firstName'] ?? '') . ' ' . ($contact['contact.familyName'] ?? ''));
         }
         
-        // City extrahieren: zuerst nested contact, dann flache Keys
+        // Stadt: ausschließlich Geschäftsstadt (keine private Stadt)
         $city = 'N/A';
-        if (!empty($contact['city'])) {
-            $city = $contact['city'];
-        } else {
-            // Fallback: Flache Keys
-            $city = $member['contact.city'] ?? 'N/A';
-        }
-        if ($city === 'N/A' && !empty($contact['contact.companyCity'])) {
+        if (!empty($contact['contact.companyCity'])) {
             $city = $contact['contact.companyCity'];
+        } elseif (!empty($contact['companyCity'])) {
+            $city = $contact['companyCity'];
+        } elseif (!empty($member['contact.companyCity'])) {
+            $city = $member['contact.companyCity'];
         }
         $img_path = BES_IMG . $id . '.png';
         // Nur URL setzen, wenn Bild tatsächlich existiert

@@ -24,6 +24,12 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 - **Karten-Filterleiste auf dem Handy:** Die Filterfelder standen alle untereinander in voller Breite; sie umbrechen jetzt kompakt wie in der Kachelansicht.
 - **Kalender-Karten:** Titel, Ortszeile und Link waren auf dem gelben Hintergrund schlecht lesbar (Theme-Farben überschrieben die Plugin-Farben, Link-Hover gelb auf gelb); sie sind jetzt dunkel und kontrastreich.
 
+## [4.0.4] — in Arbeit
+
+### Datenschutz
+- **Positivliste im Sync:** Für Kontaktdaten werden nur noch Namen, Geschäftsfelder und Koordinaten gespeichert. Private Felder (z. B. `city`, `country`, `zip`, `street`, private E-Mail, Telefon, Geburtstag) werden verworfen, auch wenn sie im Backend ausgewählt sind. Wirkt ab dem nächsten Vollsync.
+- **Frontend:** Private PLZ-/Stadt-Schlüssel entfernt (Umkreissuche, Karten-Marker).
+
 ## [Unreleased]
 
 ### Entfernt
