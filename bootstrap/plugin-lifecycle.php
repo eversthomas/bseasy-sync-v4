@@ -44,6 +44,32 @@ function bes_protect_data_dir() {
     if (!file_exists($index)) {
         file_put_contents($index, '', LOCK_EX);
     }
+
+    // Mitgliederbilder (img/) werden vom Browser direkt geladen und müssen abrufbar bleiben.
+    if (defined('BES_IMG') && BES_IMG && is_dir(BES_IMG) && is_writable(BES_IMG)) {
+        $img_dir = trailingslashit(BES_IMG);
+        $img_htaccess = $img_dir . '.htaccess';
+        if (!file_exists($img_htaccess)) {
+            $img_rules = "# BSEasy Sync: Mitgliederbilder öffentlich, keine Ordnerlisting, keine Skripte\n"
+                . "Options -Indexes\n"
+                . "<IfModule mod_authz_core.c>\n"
+                . "    Require all granted\n"
+                . "</IfModule>\n"
+                . "<IfModule !mod_authz_core.c>\n"
+                . "    Order allow,deny\n"
+                . "    Allow from all\n"
+                . "</IfModule>\n"
+                . "<FilesMatch \"\\.(php|phtml|php[0-9]|phar|pl|py|cgi|sh)$\">\n"
+                . "    <IfModule mod_authz_core.c>\n"
+                . "        Require all denied\n"
+                . "    </IfModule>\n"
+                . "    <IfModule !mod_authz_core.c>\n"
+                . "        Deny from all\n"
+                . "    </IfModule>\n"
+                . "</FilesMatch>\n";
+            file_put_contents($img_htaccess, $img_rules, LOCK_EX);
+        }
+    }
 }
 add_action('init', 'bes_protect_data_dir');
 
