@@ -600,19 +600,23 @@ function bseasy_v3_process_member_batch(
                     if ($s3 === 200 && is_array($d3)) {
                         $contact_details_loaded = true;
                         
-                        // Geo-Koordinaten IMMER extrahieren (unabhängig von Feldauswahl, analog zu Profilbild)
-                        if (isset($d3['geoPositionCoords']) && is_array($d3['geoPositionCoords'])) {
-                            $geo_coords = $d3['geoPositionCoords'];
-                            // lat extrahieren (kein empty(), damit 0 gültig bleibt)
-                            if (isset($geo_coords['lat']) && $geo_coords['lat'] !== null && $geo_coords['lat'] !== '') {
-                                $member_data['contact.geoPositionCoords.lat'] = (float)$geo_coords['lat'];
-                            }
-                            // lng extrahieren (kein empty(), damit 0 gültig bleibt)
-                            if (isset($geo_coords['lng']) && $geo_coords['lng'] !== null && $geo_coords['lng'] !== '') {
-                                $member_data['contact.geoPositionCoords.lng'] = (float)$geo_coords['lng'];
-                            }
+                        // Pin ausschließlich aus der Geschäftsadresse (Nominatim, gecacht).
+                        // EasyVerein-Koordinaten (geoPositionCoords) werden bewusst NICHT übernommen:
+                        // sie können aus der Privatadresse stammen. Ohne Geschäftsadresse gibt es keinen Pin.
+                        $pin = function_exists('bes_geocode_business_pin')
+                            ? bes_geocode_business_pin($d3, (string) $memberId)
+                            : null;
+                        if ($pin !== null) {
+                            $member_data['contact.geoPositionCoords.lat'] = $pin['lat'];
+                            $member_data['contact.geoPositionCoords.lng'] = $pin['lng'];
                         }
-                        
+                        if (function_exists('bes_geocode_report')) {
+                            $old_coords = (isset($d3['geoPositionCoords']) && is_array($d3['geoPositionCoords']))
+                                ? $d3['geoPositionCoords'] : null;
+                            bes_geocode_report((string) $memberId, $old_coords, $pin);
+                        }
+                        unset($pin, $old_coords);
+
                         // Contact Custom Fields nur laden, wenn Contact-Felder in der Auswahl sind
                         $has_contact_fields = false;
                         foreach ($selected_fields as $field_key) {
@@ -633,21 +637,6 @@ function bseasy_v3_process_member_batch(
                             
                             // Extrahiere ausgewählte Contact-Felder
                             $contact_data = bseasy_v3_extract_selected_fields($d3, $contact_cf, $selected_fields, 'contact', $token, $baseUsed);
-                            
-                            // WICHTIG: Geocoding nur durchführen, wenn geoPositionCoords in der Auswahl ist
-                            $contact = $d3 ?? [];
-                            $needs_geocoding = in_array('contact.geoPositionCoords', $selected_fields) || in_array('geoPositionCoords', $selected_fields);
-                            if ($needs_geocoding && function_exists('bes_geocode_contact_fallback')) {
-                                $contact = bes_geocode_contact_fallback($contact, $baseUsed);
-                                // Füge geoPositionCoords nur hinzu, wenn es in der Auswahl ist
-                                if (!empty($contact['geoPositionCoords']) && is_array($contact['geoPositionCoords'])) {
-                                    if (in_array('contact.geoPositionCoords', $selected_fields)) {
-                                        $contact_data['geoPositionCoords'] = $contact['geoPositionCoords'];
-                                    } elseif (in_array('geoPositionCoords', $selected_fields)) {
-                                        $contact_data['geoPositionCoords'] = $contact['geoPositionCoords'];
-                                    }
-                                }
-                            }
                             
                             // Füge Contact-Felder nur hinzu, wenn sie in der Auswahl sind
                             // (firstName, familyName, city werden bereits durch extract_selected_fields extrahiert, wenn sie in der Auswahl sind)
@@ -886,7 +875,8 @@ function bseasy_v3_get_path_value(array $data, string $path) {
 /**
  * Positivliste für Contact-Felder (Datenschutz: keine privaten Mitgliederdaten speichern).
  *
- * Erlaubt sind nur Namens- und Geschäftsfelder sowie die Koordinaten (Pins).
+ * Erlaubt sind nur Namens- und Geschäftsfelder. Koordinaten (Pins) werden separat aus der
+ * Geschäftsadresse berechnet und hier nie übernommen.
  * Alles andere (z. B. city, zip, street, country, private E-Mail, Telefon, Geburtstag)
  * wird nicht gespeichert, auch wenn es im Backend ausgewählt ist.
  * Custom Fields (cf.*, contactcf.*) und member.* werden hier nicht geprüft.
@@ -909,8 +899,8 @@ function bes_is_allowed_contact_field(string $field_key): bool {
         return true;
     }
 
-    // Koordinaten (Pins) bleiben bis zur Umstellung auf Geschäftsadress-Geocoding unverändert
-    return $name === 'geoPositionCoords' || strpos($name, 'geoPositionCoords.') === 0;
+    // Koordinaten: nie aus EasyVerein übernehmen (Pins entstehen in bes_geocode_business_pin())
+    return false;
 }
 
 /**

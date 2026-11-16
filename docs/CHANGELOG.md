@@ -29,6 +29,11 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 ### Datenschutz
 - **Positivliste im Sync:** Für Kontaktdaten werden nur noch Namen, Geschäftsfelder und Koordinaten gespeichert. Private Felder (z. B. `city`, `country`, `zip`, `street`, private E-Mail, Telefon, Geburtstag) werden verworfen, auch wenn sie im Backend ausgewählt sind. Wirkt ab dem nächsten Vollsync.
 - **Private Custom Fields gesperrt:** „Straße/PLZ/Stadt persönlich" (`cf.395501031`, `cf.395500980`, `cf.395501019`) werden nie gespeichert (erweiterbar per Filter `bes_blocked_private_custom_fields`).
+- **Pins aus der Geschäftsadresse:** Der Sync berechnet Pins per Nominatim (OpenStreetMap) aus Geschäftsstraße, PLZ, Ort und Land (strukturierte Anfrage, Fallback auf PLZ und Ort). EasyVerein-Koordinaten werden nicht mehr übernommen. Mitglieder ohne Geschäftsadresse bekommen keinen Pin. Es werden nur Geschäftsadressen an OSM gesendet.
+- **Adress-Cache:** Ergebnisse werden pro Adresse dauerhaft gespeichert (Option `bes_geocode_cache`); nur neue oder geänderte Adressen werden angefragt. Nicht gefundene Adressen werden nach 30 Tagen erneut versucht.
+- **Nominatim-Regeln:** höchstens 1 Anfrage pro Sekunde, HTTP-Status wird geprüft, Pause bei Fehlern oder nach 240 s (Filter `bes_geocode_time_budget`); der Rest wird beim nächsten Sync nachgeholt.
+- **Vergleichsbericht:** `uploads/bseasy-sync/v3/geocode_report.json` (ohne Koordinaten, ohne Namen) zeigt je Mitglieds-ID, ob der Pin neu, verschoben (mit Entfernung in Metern), entfallen oder nicht vorhanden ist.
+- **Wichtig nach dem Update:** Einen **Vollsync** starten, damit die alten Pins ersetzt werden. Der erste Lauf braucht für ca. 160 Adressen etwa 3 Minuten länger.
 - **Frontend:** Private PLZ-/Stadt-Schlüssel entfernt (Umkreissuche, Karten-Marker).
 
 ## [Unreleased]
