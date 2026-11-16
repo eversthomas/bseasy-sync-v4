@@ -10,6 +10,44 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Schützt den Datenordner (uploads/bseasy-sync/) vor direktem Abruf per URL.
+ *
+ * Legt `.htaccess` (Apache 2.2/2.4) und eine leere `index.html` an, falls sie fehlen.
+ * Das Plugin liest seine Dateien weiterhin per PHP vom Dateisystem. Unter Nginx
+ * wirkt `.htaccess` nicht – dort ist zusätzlich eine Serverregel nötig.
+ *
+ * @return void
+ */
+function bes_protect_data_dir() {
+    if (!defined('BES_DATA') || !BES_DATA || !is_dir(BES_DATA) || !is_writable(BES_DATA)) {
+        return;
+    }
+
+    $dir = trailingslashit(BES_DATA);
+
+    $htaccess = $dir . '.htaccess';
+    if (!file_exists($htaccess)) {
+        $rules = "# BSEasy Sync: kein direkter Abruf per URL\n"
+            . "<IfModule mod_authz_core.c>\n"
+            . "    Require all denied\n"
+            . "</IfModule>\n"
+            . "<IfModule !mod_authz_core.c>\n"
+            . "    Order allow,deny\n"
+            . "    Deny from all\n"
+            . "</IfModule>\n";
+        if (file_put_contents($htaccess, $rules, LOCK_EX) === false && function_exists('bes_debug_log')) {
+            bes_debug_log('.htaccess konnte nicht angelegt werden: ' . $htaccess, 'WARN', 'filesystem');
+        }
+    }
+
+    $index = $dir . 'index.html';
+    if (!file_exists($index)) {
+        file_put_contents($index, '', LOCK_EX);
+    }
+}
+add_action('init', 'bes_protect_data_dir');
+
+/**
  * Plugin-Aktivierung
  */
 function bes_plugin_activate() {
@@ -65,6 +103,7 @@ function bes_plugin_activate() {
             }
         }
         // V2-Verzeichnisse werden nicht mehr erstellt (nur noch V3)
+        bes_protect_data_dir();
     }
 
     // Setze Standard-Optionen (autoload=false für Performance)

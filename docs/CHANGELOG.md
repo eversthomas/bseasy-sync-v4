@@ -12,6 +12,9 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 - **JSON-LD** wird mit Hex-Escaping ausgegeben (kein Ausbruch aus dem `<script>`-Block durch Sonderzeichen in Profilfeldern).
 - **AJAX-Filter** (`bes_filter_members`) durchsucht und liefert nur noch Geschäftsstadt und Geschäfts-PLZ statt der privaten Stadt.
 
+### Sicherheit
+- **Datenordner geschützt:** Das Plugin legt in `uploads/bseasy-sync/` automatisch eine `.htaccess` (Apache) und eine leere `index.html` an, damit `sync.log` und `fields-config.json` nicht per URL abrufbar sind. Unter Nginx ist zusätzlich eine Serverregel nötig.
+
 ### Behoben
 - **Karten-Filter:** Jeder Filter ließ alle Marker verschwinden (die Umkreis-Auswahlen wurden fälschlich als Filter gezählt); auch „Zurücksetzen" half nicht.
 - **Suche auf der Karte:** Namen und Orte der Marker waren leer, die Suche nach Name oder Stadt fand nichts. Namen und Geschäftsstadt werden jetzt korrekt gelesen.
