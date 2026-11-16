@@ -25,6 +25,12 @@ function bes_generate_field_label(array $field): string
     $type = $field['type'] ?? 'unknown';
     $example = $field['example'] ?? null;
     
+    // 0. Private Felder immer eindeutig kennzeichnen
+    $private_fields = bes_get_private_field_labels();
+    if (isset($private_fields[$id])) {
+        return $private_fields[$id];
+    }
+
     // 1. Bekannte Feldnamen-Mappings
     $known_fields = bes_get_known_field_mappings();
     if (isset($known_fields[$id])) {
@@ -61,27 +67,55 @@ function bes_get_known_field_mappings(): array
         'member.joinDate' => 'Beitrittsdatum',
         'member.exitDate' => 'Austrittsdatum',
         
-        // Contact-Felder
-        'contact.firstName' => 'Vorname',
-        'contact.familyName' => 'Nachname',
-        'contact.name' => 'Name',
-        'contact.email' => 'E-Mail',
-        'contact.companyEmail' => 'E-Mail (Firma)',
-        'contact.privateEmail' => 'E-Mail (privat)',
-        'contact.phone' => 'Telefon',
-        'contact.mobilePhone' => 'Mobil',
-        'contact.street' => 'Straße',
-        'contact.zip' => 'PLZ',
-        'contact.city' => 'Ort',
-        'contact.country' => 'Land',
-        'contact.bio' => 'Biografie',
-        'contact.birthday' => 'Geburtstag',
-        'contact.gender' => 'Geschlecht',
-        
+        // Contact-Felder: die echten IDs im Felder-Tab heißen "contact.contact.<feld>"
+        'contact.contact.firstName'    => 'Vorname',
+        'contact.contact.familyName'   => 'Nachname',
+        'contact.contact.nameAffix'    => 'Namenszusatz',
+        'contact.contact.companyName'  => 'Geschäftlich: Firma / Name',
+        'contact.contact.companyStreet'  => 'Geschäftlich: Straße',
+        'contact.contact.companyZip'     => 'Geschäftlich: PLZ',
+        'contact.contact.companyCity'    => 'Geschäftlich: Stadt',
+        'contact.contact.companyState'   => 'Geschäftlich: Bundesland',
+        'contact.contact.companyCountry' => 'Geschäftlich: Land',
+        'contact.contact.company_country_code_invoice' => 'Geschäftlich: Ländercode',
+        'contact.contact.companyEmail'   => 'Geschäftlich: E-Mail',
+        'contact.geoPositionCoords.lat'  => 'Pin: Breitengrad (aus Geschäftsadresse)',
+        'contact.geoPositionCoords.lng'  => 'Pin: Längengrad (aus Geschäftsadresse)',
+
         // Häufige Custom Field Patterns
         'cf.50359307' => 'Online Angebote',
         'cf.50697357' => 'Bereitschaftsdienst',
     ];
+}
+
+/**
+ * Private Felder: werden vom Sync nicht gespeichert (Positivliste) und im Backend entsprechend gekennzeichnet.
+ *
+ * @return array Mapping von Feld-ID zu Label
+ */
+function bes_get_private_field_labels(): array
+{
+    $suffix = ' (wird nicht übernommen)';
+    $private = [
+        'street' => 'Straße', 'zip' => 'PLZ', 'city' => 'Stadt', 'state' => 'Bundesland',
+        'country' => 'Land', 'country_code' => 'Ländercode',
+        'privateEmail' => 'E-Mail', 'privatePhone' => 'Telefon', 'mobilePhone' => 'Mobil',
+        'primaryEmail' => 'Haupt-E-Mail', 'dateOfBirth' => 'Geburtsdatum', 'age' => 'Alter',
+        'addressSuffix' => 'Adresszusatz',
+    ];
+
+    $labels = [];
+    foreach ($private as $key => $label) {
+        $labels['contact.contact.' . $key] = 'Privat: ' . $label . $suffix;
+        $labels['contact.' . $key]         = 'Privat: ' . $label . $suffix; // ältere ID-Schreibweise
+    }
+
+    // Custom Fields mit privater Adresse (werden im Sync nie gespeichert)
+    $labels['cf.395501031'] = 'Privat: Straße persönlich' . $suffix;
+    $labels['cf.395500980'] = 'Privat: PLZ persönlich' . $suffix;
+    $labels['cf.395501019'] = 'Privat: Stadt persönlich' . $suffix;
+
+    return $labels;
 }
 
 /**
@@ -232,8 +266,20 @@ function bes_camelcase_to_label(string $camelCase): string
 function bes_auto_generate_labels(array $fields): array
 {
     foreach ($fields as &$field) {
-        // Nur wenn kein Label oder Label = ID
-        if (empty($field['label']) || $field['label'] === $field['id']) {
+        $id = $field['id'] ?? '';
+        $label = $field['label'] ?? '';
+        $example = $field['example'] ?? null;
+        $example_str = is_array($example) ? implode(', ', $example) : (string) $example;
+
+        // Private Felder: Kennzeichnung immer erzwingen (auch bei gespeicherten Alt-Labels wie "Essen")
+        if (isset(bes_get_private_field_labels()[$id])) {
+            $field['label'] = bes_generate_field_label($field);
+            continue;
+        }
+
+        // Sonst nur, wenn kein Label, Label = ID, oder das Label wurde früher aus einem Beispielwert abgeleitet
+        $from_example = $label !== '' && $example_str !== '' && $label === $example_str;
+        if (empty($label) || $label === $id || $from_example) {
             $field['label'] = bes_generate_field_label($field);
         }
     }

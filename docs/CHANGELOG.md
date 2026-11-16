@@ -34,6 +34,7 @@ Alle wesentlichen Änderungen an diesem Plugin. Format orientiert sich an [Keep 
 - **Nominatim-Regeln:** höchstens 1 Anfrage pro Sekunde, HTTP-Status wird geprüft, Pause bei Fehlern oder nach 240 s (Filter `bes_geocode_time_budget`); der Rest wird beim nächsten Sync nachgeholt.
 - **Vergleichsbericht:** `uploads/bseasy-sync/v3/geocode_report.json` (ohne Koordinaten, ohne Namen) zeigt je Mitglieds-ID, ob der Pin neu, verschoben (mit Entfernung in Metern), entfallen oder nicht vorhanden ist.
 - **Wichtig nach dem Update:** Einen **Vollsync** starten, damit die alten Pins ersetzt werden. Der erste Lauf braucht für ca. 160 Adressen etwa 3 Minuten länger.
+- **Backend-Labels:** Im Felder-Tab heißen Geschäftsfelder jetzt „Geschäftlich: Straße/PLZ/Stadt/Land/E-Mail/Firma", Pins „Pin: Breitengrad/Längengrad (aus Geschäftsadresse)", private Felder „Privat: … (wird nicht übernommen)". Die Zuordnung nutzt die echten IDs (`contact.contact.*`); bisher entstanden Labels wie „Essen" aus Beispielwerten. Gespeicherte Alt-Labels, die einem Beispielwert entsprechen, werden beim Anzeigen ersetzt, selbst gewählte Labels bleiben.
 - **Frontend:** Private PLZ-/Stadt-Schlüssel entfernt (Umkreissuche, Karten-Marker).
 
 ## [Unreleased]
